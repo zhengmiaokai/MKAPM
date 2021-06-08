@@ -53,22 +53,66 @@
     
     [NSURLConnection swizzledInstanceMethodOriginalSelector:@selector(initWithRequest:delegate:startImmediately:) swizzledSelector:@selector(swizzled_initWithRequest:delegate:startImmediately:)];
     
-    /* Proxy的方式无法实现类方法sendAsync与sendSync的监听（URLConnection已经弃用） */
-    [self hookURLConnectionSendAsynchronous];
-    [self hookURLConnectionSendSynchronous];
+    /* Proxy的方式只实现了Delegate的监听，实例方法的调用需要单独Hook */
+    [self swizzledURLSessionAsynchronousTask];
     
-    /* Proxy的方式已经覆盖了URLSession请求的监听，也可以通过Hook具体类的URLSessionDelegate方法实现监听（["ClassA", "ClassB"]）
-    [self hookURLSessionDidReceiveResponseIntoClass:NSClassFromString(@"DownloadTaskQueue")];
-    [self hookURLSessionDidReceiveDataIntoClass:NSClassFromString(@"DownloadTaskQueue")];
-    [self hookURLSessionDidCompleteWithErrorIntoClass:NSClassFromString(@"DownloadTaskQueue")];
+    /* Proxy的方式只实现了Delegate的监听，类方法sendAsync与sendSync需要单独Hook（NSURLConnection官方已经弃用） */
+    [self swizzledURLConnectionSendAsynchronous];
+    [self swizzledURLConnectionSendSynchronous];
     
-    [self hookURLSessionDidReceiveResponseIntoClass:NSClassFromString(@"AFURLSessionManager")];
-    [self hookURLSessionDidReceiveDataIntoClass:NSClassFromString(@"AFURLSessionManager")];
-    [self hookURLSessionDidCompleteWithErrorIntoClass:NSClassFromString(@"AFURLSessionManager")];
-     */
+    /* Proxy的方式也可以通过Hook具体类的URLSessionDelegate方法实现监听（["ClassA", "ClassB"]）
+    [self swizzledURLSessionDidReceiveResponseIntoClass:NSClassFromString(@"DownloadTaskQueue")];
+    [self swizzledURLSessionDidReceiveDataIntoClass:NSClassFromString(@"DownloadTaskQueue")];
+    [self swizzledURLSessionDidCompleteWithErrorIntoClass:NSClassFromString(@"DownloadTaskQueue")];
+    
+    [self swizzledURLSessionDidReceiveResponseIntoClass:NSClassFromString(@"AFURLSessionManager")];
+    [self swizzledURLSessionDidReceiveDataIntoClass:NSClassFromString(@"AFURLSessionManager")];
+    [self swizzledURLSessionDidCompleteWithErrorIntoClass:NSClassFromString(@"AFURLSessionManager")];
+    */
 }
 
-+ (void)hookURLConnectionSendAsynchronous {
+#pragma mark - URLSession实例方法的监听 -
++ (void)swizzledURLSessionAsynchronousTask {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        Class class = [NSURLSession class];
+        
+        const SEL selectors[] = {
+            @selector(dataTaskWithURL:completionHandler:),
+            @selector(dataTaskWithRequest:completionHandler:),
+            @selector(downloadTaskWithURL:completionHandler:),
+            @selector(downloadTaskWithRequest:completionHandler:),
+            @selector(downloadTaskWithResumeData:completionHandler:)
+        };
+        
+        typedef void (^MKURLSessionAsyncCompletion)(id dataOrFilePath, NSURLResponse *response, NSError *error);
+        
+        const int totalNum = sizeof(selectors) / sizeof(SEL);
+        
+        for (int index = 0; index < totalNum; index++) {
+            SEL selector = selectors[index];
+            SEL swizzledSelector = [MKHookUtil swizzledSelectorForSelector:selector];
+            
+            NSURLSessionTask *(^asynchronousTaskSwizzleBlock)(Class, id, MKURLSessionAsyncCompletion) = ^NSURLSessionTask *(Class slf, id argument, MKURLSessionAsyncCompletion completion) {
+                /// 开始异步请求
+                
+                MKURLSessionAsyncCompletion completionWrapper = ^(id dataOrFilePath, NSURLResponse *response, NSError *error) {
+                    /// 结束异步请求
+                    if (completion) {
+                        completion(dataOrFilePath, response, error);
+                    }
+                };
+                
+                NSURLSessionTask *task = ((id(*)(id, SEL, id, id))objc_msgSend)(slf, swizzledSelector, argument, completionWrapper);
+                return task;
+            };
+            [MKHookUtil replaceImplementationOfKnownSelector:selector swizzledSelector:swizzledSelector cls:class implementationBlock:asynchronousTaskSwizzleBlock];
+        }
+    });
+}
+
+#pragma mark - URLConnection类方法的监听 -
++ (void)swizzledURLConnectionSendAsynchronous {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         Class class = objc_getMetaClass(class_getName([NSURLConnection class]));
@@ -94,7 +138,7 @@
     });
 }
 
-+ (void)hookURLConnectionSendSynchronous {
++ (void)swizzledURLConnectionSendSynchronous {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         Class class = objc_getMetaClass(class_getName([NSURLConnection class]));
@@ -112,7 +156,8 @@
     });
 }
 
-+ (void)hookURLSessionDidReceiveResponseIntoClass:(Class)cls {
+#pragma mark - 具体类的URLSessionDelegate方法监听 -
++ (void)swizzledURLSessionDidReceiveResponseIntoClass:(Class)cls {
     
     if (!cls) {
         return;
@@ -146,7 +191,7 @@
     [MKHookUtil replaceImplementationOfSelector:selector swizzledSelector:swizzledSelector cls:cls methodDescription:methodDescription implementationBlock:implementationBlock undefinedBlock:undefinedBlock];
 }
 
-+ (void)hookURLSessionDidReceiveDataIntoClass:(Class)cls {
++ (void)swizzledURLSessionDidReceiveDataIntoClass:(Class)cls {
     
     if (!cls) {
         return;
@@ -181,7 +226,7 @@
 }
 
 
-+ (void)hookURLSessionDidCompleteWithErrorIntoClass:(Class)cls {
++ (void)swizzledURLSessionDidCompleteWithErrorIntoClass:(Class)cls {
     
     if (!cls) {
         return;
