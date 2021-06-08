@@ -11,13 +11,15 @@
 NSString *const MKURLSessionTaskDidCompleteWithError = @"URLSession:task:didCompleteWithError:";
 NSString *const MKURLSessionDataTaskDidReceiveData = @"URLSession:dataTask:didReceiveData:";
 NSString *const MKURLSessionDataTaskDidReceiveResponse = @"URLSession:dataTask:didReceiveResponse:completionHandler:";
+NSString *const MKURLSessionDataTaskDidFinishCollectingMetrics = @"URLSession:task:didFinishCollectingMetrics:";
 
 @implementation MKURLSessionDelegate
 
 - (BOOL)respondsToSelector:(SEL)aSelector {
     if ([NSStringFromSelector(aSelector) isEqualToString:MKURLSessionTaskDidCompleteWithError] ||
         [NSStringFromSelector(aSelector) isEqualToString:MKURLSessionDataTaskDidReceiveData] ||
-        [NSStringFromSelector(aSelector) isEqualToString:MKURLSessionDataTaskDidReceiveResponse]) {
+        [NSStringFromSelector(aSelector) isEqualToString:MKURLSessionDataTaskDidReceiveResponse] ||
+        [NSStringFromSelector(aSelector) isEqualToString:MKURLSessionDataTaskDidFinishCollectingMetrics]) {
         return YES;
     }
     return [self.target respondsToSelector:aSelector];
@@ -32,7 +34,7 @@ NSString *const MKURLSessionDataTaskDidReceiveResponse = @"URLSession:dataTask:d
         __unsafe_unretained NSError *error;
         [invocation getArgument:&error atIndex:4];
         if(task && error){
-            // 实现hook操作
+            /// 数据收集
         }
     } else if ([NSStringFromSelector(invocation.selector) isEqualToString:MKURLSessionDataTaskDidReceiveData]) {
         __unsafe_unretained NSURLSessionDataTask *dataTask;
@@ -40,7 +42,7 @@ NSString *const MKURLSessionDataTaskDidReceiveResponse = @"URLSession:dataTask:d
         __unsafe_unretained NSData *data;
         [invocation getArgument:&data atIndex:4];
         if(dataTask && data){
-            // 实现hook操作
+            /// 数据收集
         }
     } else if ([NSStringFromSelector(invocation.selector) isEqualToString:MKURLSessionDataTaskDidReceiveResponse]) {
         __unsafe_unretained NSURLSessionDataTask *dataTask;
@@ -48,7 +50,15 @@ NSString *const MKURLSessionDataTaskDidReceiveResponse = @"URLSession:dataTask:d
         __unsafe_unretained NSHTTPURLResponse *response;
         [invocation getArgument:&response atIndex:4];
         if(dataTask && response){
-            // 实现hook操作
+            /// 数据收集
+        }
+    } else if ([NSStringFromSelector(invocation.selector) isEqualToString:MKURLSessionDataTaskDidFinishCollectingMetrics]) {
+        __unsafe_unretained NSURLSessionTask *task;
+        [invocation getArgument:&task atIndex:3];
+        __unsafe_unretained NSURLSessionTaskMetrics *taskMetrics;
+        [invocation getArgument:&taskMetrics atIndex:4];
+        if(task && taskMetrics){
+            /// 数据收集
         }
     }
 }

@@ -32,7 +32,7 @@ NSString *const MKURLConnectionkDidReceiveResponse = @"connection:didReceiveResp
         __unsafe_unretained NSError *error;
         [invocation getArgument:&error atIndex:3];
         if(conection && error){
-            // 实现hook操作
+            /// 数据收集
         }
     } else if ([NSStringFromSelector(invocation.selector) isEqualToString:MKURLConnectionkDidReceiveData]) {
         __unsafe_unretained NSURLConnection *conection;
@@ -40,7 +40,7 @@ NSString *const MKURLConnectionkDidReceiveResponse = @"connection:didReceiveResp
         __unsafe_unretained NSData *data;
         [invocation getArgument:&data atIndex:3];
         if(conection && data){
-            // 实现hook操作
+            /// 数据收集
         }
     } else if ([NSStringFromSelector(invocation.selector) isEqualToString:MKURLConnectionkDidReceiveResponse]) {
         __unsafe_unretained NSURLConnection *conection;
@@ -48,7 +48,7 @@ NSString *const MKURLConnectionkDidReceiveResponse = @"connection:didReceiveResp
         __unsafe_unretained NSURLResponse *response;
         [invocation getArgument:&response atIndex:3];
         if(conection && response){
-            // 实现hook操作
+            /// 数据收集
         }
     }
 }

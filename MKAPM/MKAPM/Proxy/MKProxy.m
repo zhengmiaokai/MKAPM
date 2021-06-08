@@ -27,7 +27,9 @@
 }
 
 - (void)forwardInvocation:(NSInvocation *)invocation {
-    [invocation invokeWithTarget:self.target];
+    if ([self.target respondsToSelector:invocation.selector]) {
+        [invocation invokeWithTarget:self.target];
+    }
 }
 
 @end
