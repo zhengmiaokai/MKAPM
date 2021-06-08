@@ -59,30 +59,29 @@ NSString *const MKURLSessionDataTaskDidFinishCollectingMetrics = @"URLSession:ta
         [invocation getArgument:&taskMetrics atIndex:4];
         if(task && taskMetrics){
             /// 数据收集
-            NSURLSessionTaskTransactionMetrics* transactionMetrics = taskMetrics.transactionMetrics.firstObject;
-            if (transactionMetrics.response) {
-                /* fetch -> domainLookup -> request -> response
+            NSURLSessionTaskTransactionMetrics* metrics = taskMetrics.transactionMetrics.firstObject;
+            if (metrics.response) {
+                NSDate* startDate = metrics.fetchStartDate;
+                long dnsTime = [metrics.domainLookupEndDate timeIntervalSinceDate:metrics.domainLookupStartDate] * 1000;
+                long ipConnectTime = [metrics.connectEndDate timeIntervalSinceDate:metrics.connectStartDate] * 1000;
+                long sslTime = [metrics.secureConnectionEndDate timeIntervalSinceDate:metrics.secureConnectionStartDate] * 1000;
+                long totalTime = [metrics.responseEndDate timeIntervalSinceDate:metrics.fetchStartDate] * 1000;
+                long firstPackageTime = [metrics.responseStartDate timeIntervalSinceDate:metrics.requestStartDate] * 1000;
+                long wholePackageTime = [metrics.responseEndDate timeIntervalSinceDate:metrics.requestStartDate] * 1000;
+                
+                NSLog(@"开始时间：%@，总耗时：%ldms，首包耗时：%ldms，完整包耗时：%ldms，DNS解析耗时：%ldms，IP直连耗时：%ldms，SSL连接耗时：%ldms\n", startDate, totalTime, firstPackageTime, wholePackageTime, dnsTime, ipConnectTime, sslTime);
+                
+                /* 流程：fetch -> domainLookup（DNS解析） -> connect（IP直连） -> secureConnection（SSL连接） -> request -> response
                  
-                 transactionMetrics.request
-                 transactionMetrics.response
+                 metrics.countOfRequestHeaderBytesSent        请求头大小
+                 metrics.countOfRequestBodyBytesSent          请求体大小
+                 metrics.countOfResponseHeaderBytesReceived   响应头大小
+                 metrics.countOfResponseBodyBytesReceived     响应体大小
                  
-                 transactionMetrics.fetchStartDate           1623139146.473654
-                 transactionMetrics.domainLookupStartDate    1623139146.475172
-                 transactionMetrics.domainLookupEndDate      1623139146.476172
-                 transactionMetrics.requestStartDate         1623139146.546698
-                 transactionMetrics.requestEndDate           1623139146.546901
-                 transactionMetrics.responseStartDate        1623139146.557371
-                 transactionMetrics.responseEndDate          1623139146.557828
-                 
-                 transactionMetrics.countOfRequestHeaderBytesSent        请求头大小
-                 transactionMetrics.countOfRequestBodyBytesSent          请求体大小
-                 transactionMetrics.countOfResponseHeaderBytesReceived   响应头大小
-                 transactionMetrics.countOfResponseBodyBytesReceived     响应体大小
-                 
-                 transactionMetrics.localAddress    本地IP
-                 transactionMetrics.localPort       本地端口
-                 transactionMetrics.remoteAddress   远程IP
-                 transactionMetrics.remotePort      远程端口
+                 metrics.localAddress    本地IP
+                 metrics.localPort       本地端口
+                 metrics.remoteAddress   远程IP
+                 metrics.remotePort      远程端口
                 */
             }
         }
