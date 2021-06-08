@@ -59,6 +59,32 @@ NSString *const MKURLSessionDataTaskDidFinishCollectingMetrics = @"URLSession:ta
         [invocation getArgument:&taskMetrics atIndex:4];
         if(task && taskMetrics){
             /// 数据收集
+            NSURLSessionTaskTransactionMetrics* transactionMetrics = taskMetrics.transactionMetrics.firstObject;
+            if (transactionMetrics.response) {
+                /* fetch -> domainLookup -> request -> response
+                 
+                 transactionMetrics.request
+                 transactionMetrics.response
+                 
+                 transactionMetrics.fetchStartDate           1623139146.473654
+                 transactionMetrics.domainLookupStartDate    1623139146.475172
+                 transactionMetrics.domainLookupEndDate      1623139146.476172
+                 transactionMetrics.requestStartDate         1623139146.546698
+                 transactionMetrics.requestEndDate           1623139146.546901
+                 transactionMetrics.responseStartDate        1623139146.557371
+                 transactionMetrics.responseEndDate          1623139146.557828
+                 
+                 transactionMetrics.countOfRequestHeaderBytesSent        请求头大小
+                 transactionMetrics.countOfRequestBodyBytesSent          请求体大小
+                 transactionMetrics.countOfResponseHeaderBytesReceived   响应头大小
+                 transactionMetrics.countOfResponseBodyBytesReceived     响应体大小
+                 
+                 transactionMetrics.localAddress    本地IP
+                 transactionMetrics.localPort       本地端口
+                 transactionMetrics.remoteAddress   远程IP
+                 transactionMetrics.remotePort      远程端口
+                */
+            }
         }
     }
 }
