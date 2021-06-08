@@ -61,13 +61,8 @@
     [self swizzledURLConnectionSendSynchronous];
     
     /* Proxy的方式也可以通过Hook具体类的URLSessionDelegate方法实现监听（["ClassA", "ClassB"]）
-    [self swizzledURLSessionDidReceiveResponseIntoClass:NSClassFromString(@"DownloadTaskQueue")];
-    [self swizzledURLSessionDidReceiveDataIntoClass:NSClassFromString(@"DownloadTaskQueue")];
-    [self swizzledURLSessionDidCompleteWithErrorIntoClass:NSClassFromString(@"DownloadTaskQueue")];
-    
-    [self swizzledURLSessionDidReceiveResponseIntoClass:NSClassFromString(@"AFURLSessionManager")];
-    [self swizzledURLSessionDidReceiveDataIntoClass:NSClassFromString(@"AFURLSessionManager")];
-    [self swizzledURLSessionDidCompleteWithErrorIntoClass:NSClassFromString(@"AFURLSessionManager")];
+    [self swizzledURLSessionIntoClass:NSClassFromString(@"DownloadTaskQueue")];
+    [self swizzledURLSessionIntoClass:NSClassFromString(@"AFURLSessionManager")];
     */
 }
 
@@ -157,12 +152,15 @@
 }
 
 #pragma mark - 具体类的URLSessionDelegate方法监听 -
-+ (void)swizzledURLSessionDidReceiveResponseIntoClass:(Class)cls {
-    
-    if (!cls) {
-        return;
++ (void)swizzledURLSessionIntoClass:(Class)cls {
+    if (cls) {
+        [self swizzledURLSessionDidReceiveDataIntoClass:cls];
+        [self swizzledURLSessionDidReceiveResponseIntoClass:cls];
+        [self swizzledURLSessionDidCompleteWithErrorIntoClass:cls];
     }
-    
+}
+
++ (void)swizzledURLSessionDidReceiveResponseIntoClass:(Class)cls {
     SEL selector = @selector(URLSession:dataTask:didReceiveResponse:completionHandler:);
     SEL swizzledSelector = [MKHookUtil swizzledSelectorForSelector:selector];
     
@@ -192,11 +190,6 @@
 }
 
 + (void)swizzledURLSessionDidReceiveDataIntoClass:(Class)cls {
-    
-    if (!cls) {
-        return;
-    }
-    
     SEL selector = @selector(URLSession:dataTask:didReceiveData:);
     SEL swizzledSelector = [MKHookUtil swizzledSelectorForSelector:selector];
     
@@ -227,11 +220,6 @@
 
 
 + (void)swizzledURLSessionDidCompleteWithErrorIntoClass:(Class)cls {
-    
-    if (!cls) {
-        return;
-    }
-    
     SEL selector = @selector(URLSession:task:didCompleteWithError:);
     SEL swizzledSelector = [MKHookUtil swizzledSelectorForSelector:selector];
     
