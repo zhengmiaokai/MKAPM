@@ -7,17 +7,14 @@
 //
 
 #import "CatchANR.h"
-
-#import <CrashReporter/CrashReporter.h>
-
 #import <libkern/OSAtomic.h>
 #import <execinfo.h>
+#import <CrashReporter/CrashReporter.h>
 
-static int kTimeoutInterval = 1000;//单次定时器触发时间，1000毫秒
-static int kTimeoutCount = 3;//定时器触发次数，总时间为timeout * timeoutCount
+static int kTimeoutInterval = 400;  /// 单次定时器触发时间（毫秒）
+static int kTimeoutCount = 5;       /// 定时器触发次数，总时间为timeout * timeoutCount
 
-@interface CatchANR ()
-{
+@interface CatchANR () {
     int _timeoutCount;
     CFRunLoopObserverRef _observer;
     
@@ -40,13 +37,10 @@ static int kTimeoutCount = 3;//定时器触发次数，总时间为timeout * tim
 }
 
 static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info) {
-    
     CatchANR* catchANR = (__bridge CatchANR*)info;
-    
     catchANR->_activity = activity;
     
     dispatch_semaphore_t semaphore = catchANR->_semaphore;
-    
     dispatch_semaphore_signal(semaphore);
 }
 
@@ -61,8 +55,9 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
 }
 
 - (void)startListen {
-    if (_observer)
+    if (_observer) {
         return;
+    }
     
     _semaphore = dispatch_semaphore_create(0);
     
@@ -88,15 +83,11 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
                 }
                 
                 if (self->_activity == kCFRunLoopBeforeSources || self->_activity == kCFRunLoopAfterWaiting) {
-                    
-                    if (++self->_timeoutCount < kTimeoutCount)
+                    if (++self->_timeoutCount < kTimeoutCount) {
                         continue;
-                    
+                    }
                     [self crashReporter];
-                    
-                    /*
-                     [self logStack];
-                     */
+                    /* [self logStack]; */
                 }
             }
             self->_timeoutCount = 0;
