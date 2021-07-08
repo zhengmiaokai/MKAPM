@@ -6,7 +6,7 @@
 //  Copyright © 2019 zhengmiaokai. All rights reserved.
 //
 
-/****** Proxy基类，可以实现delegate的AOP（面向切面编程） ******/
+/****** Proxy基类，可以实现delegate的AOP（面向切面编程）<如果target实现了respondsToSelector方法，子类实现respondsToSelector时需要注意方法兼容> ******/
 
 #import <Foundation/Foundation.h>
 

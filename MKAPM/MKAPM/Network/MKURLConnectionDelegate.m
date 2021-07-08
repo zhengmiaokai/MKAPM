@@ -14,15 +14,6 @@ NSString *const MKURLConnectionkDidReceiveResponse = @"connection:didReceiveResp
 
 @implementation MKURLConnectionDelegate
 
-- (BOOL)respondsToSelector:(SEL)aSelector {
-    if ([NSStringFromSelector(aSelector) isEqualToString:MKURLConnectionDidCompleteWithError] ||
-        [NSStringFromSelector(aSelector) isEqualToString:MKURLConnectionkDidReceiveData] ||
-        [NSStringFromSelector(aSelector) isEqualToString:MKURLConnectionkDidReceiveResponse]) {
-        return YES;
-    }
-    return [self.target respondsToSelector:aSelector];
-}
-
 - (void)forwardInvocation:(NSInvocation *)invocation {
     [super forwardInvocation:invocation];
     
