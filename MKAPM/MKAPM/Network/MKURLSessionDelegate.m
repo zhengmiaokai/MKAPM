@@ -8,12 +8,11 @@
 
 #import "MKURLSessionDelegate.h"
 
-NSString *const MKURLSessionDataTaskDidReceiveChallenge = @"URLSession:task:didReceiveChallenge:completionHandler:";
-NSString *const MKURLSessionDataTaskDidSendBodyData = @"URLSession:task:didSendBodyData:totalBytesSent:totalBytesExpectedToSend:";
 NSString *const MKURLSessionDataTaskDidReceiveResponse = @"URLSession:dataTask:didReceiveResponse:completionHandler:";
 NSString *const MKURLSessionDataTaskDidReceiveData = @"URLSession:dataTask:didReceiveData:";
 NSString *const MKURLSessionTaskDidCompleteWithError = @"URLSession:task:didCompleteWithError:";
 NSString *const MKURLSessionDataTaskDidFinishCollectingMetrics = @"URLSession:task:didFinishCollectingMetrics:";
+NSString *const MKURLSessionDataTaskWillPerformHTTPRedirection = @"URLSession:task:willPerformHTTPRedirection:newRequest:completionHandler:";
 
 @implementation MKURLSessionDelegate
 
@@ -25,8 +24,9 @@ NSString *const MKURLSessionDataTaskDidFinishCollectingMetrics = @"URLSession:ta
         [invocation getArgument:&task atIndex:3];
         __unsafe_unretained NSError *error;
         [invocation getArgument:&error atIndex:4];
-        if(task && error){
+        if(task){
             /// 数据收集
+            NSLog(@"MKURLSessionTaskDidCompleteWithError: %@", task.currentRequest.URL);
         }
     } else if ([NSStringFromSelector(invocation.selector) isEqualToString:MKURLSessionDataTaskDidReceiveData]) {
         __unsafe_unretained NSURLSessionDataTask *dataTask;
@@ -35,6 +35,7 @@ NSString *const MKURLSessionDataTaskDidFinishCollectingMetrics = @"URLSession:ta
         [invocation getArgument:&data atIndex:4];
         if(dataTask && data){
             /// 数据收集
+            NSLog(@"MKURLSessionDataTaskDidReceiveData: %@", dataTask.currentRequest.URL);
         }
     } else if ([NSStringFromSelector(invocation.selector) isEqualToString:MKURLSessionDataTaskDidReceiveResponse]) {
         __unsafe_unretained NSURLSessionDataTask *dataTask;
@@ -43,11 +44,8 @@ NSString *const MKURLSessionDataTaskDidFinishCollectingMetrics = @"URLSession:ta
         [invocation getArgument:&response atIndex:4];
         if(dataTask && response){
             /// 数据收集
+            NSLog(@"MKURLSessionDataTaskDidReceiveResponse: %@", dataTask.currentRequest.URL);
         }
-    } else if ([NSStringFromSelector(invocation.selector) isEqualToString:MKURLSessionDataTaskDidReceiveChallenge]) {
-        /// 数据收集
-    } else if ([NSStringFromSelector(invocation.selector) isEqualToString:MKURLSessionDataTaskDidSendBodyData]) {
-        /// 数据收集
     } else if ([NSStringFromSelector(invocation.selector) isEqualToString:MKURLSessionDataTaskDidFinishCollectingMetrics]) {
         __unsafe_unretained NSURLSessionTask *task;
         [invocation getArgument:&task atIndex:3];
@@ -55,6 +53,7 @@ NSString *const MKURLSessionDataTaskDidFinishCollectingMetrics = @"URLSession:ta
         [invocation getArgument:&taskMetrics atIndex:4];
         if(task && taskMetrics){
             /// 数据收集
+            NSLog(@"MKURLSessionDataTaskDidFinishCollectingMetrics: %@", task.currentRequest.URL);
             NSURLSessionTaskTransactionMetrics* metrics = taskMetrics.transactionMetrics.firstObject;
             if (metrics.response) {
                 NSDate* startDate = metrics.fetchStartDate;
@@ -80,6 +79,15 @@ NSString *const MKURLSessionDataTaskDidFinishCollectingMetrics = @"URLSession:ta
                  metrics.remotePort      远程端口
                 */
             }
+        }
+    } else if ([NSStringFromSelector(invocation.selector) isEqualToString:MKURLSessionDataTaskWillPerformHTTPRedirection]) {
+        __unsafe_unretained NSURLSessionDataTask *dataTask;
+        [invocation getArgument:&dataTask atIndex:3];
+        __unsafe_unretained NSHTTPURLResponse *response;
+        [invocation getArgument:&response atIndex:4];
+        if(dataTask && response){
+            /// 数据收集
+            NSLog(@"MKURLSessionDataTaskWillPerformHTTPRedirection: %@", dataTask.currentRequest.URL);
         }
     }
 }
