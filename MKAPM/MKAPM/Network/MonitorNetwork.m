@@ -23,9 +23,13 @@
 @implementation NSURLSession (MonitorNetwork)
 
 + (NSURLSession *)swizzled_sessionWithConfiguration:(NSURLSessionConfiguration *)configuration delegate:(nullable id <NSURLSessionDelegate>)delegate delegateQueue:(nullable NSOperationQueue *)queue {
-    MKURLSessionDelegate* proxy = [[MKURLSessionDelegate alloc] initWithTarget:delegate];
-    objc_setAssociatedObject(delegate ,@"MKURLSessionDelegate" ,proxy, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    return [self swizzled_sessionWithConfiguration:configuration delegate:(id <NSURLSessionDelegate>)proxy delegateQueue:queue];
+    if (delegate) {
+        MKURLSessionDelegate* proxy = [[MKURLSessionDelegate alloc] initWithTarget:delegate];
+        objc_setAssociatedObject(delegate ,@"MKURLSessionDelegate" ,proxy, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        return [self swizzled_sessionWithConfiguration:configuration delegate:(id <NSURLSessionDelegate>)proxy delegateQueue:queue];
+    } else {
+        return [self swizzled_sessionWithConfiguration:configuration delegate:nil delegateQueue:queue];
+    }
 }
 
 @end
@@ -39,9 +43,13 @@
 @implementation NSURLConnection (MonitorNetwork)
 
 - (nullable instancetype)swizzled_initWithRequest:(NSURLRequest *)request delegate:(nullable id)delegate startImmediately:(BOOL)startImmediately {
-    MKURLSessionDelegate* proxy = [[MKURLSessionDelegate alloc] initWithTarget:delegate];
-    objc_setAssociatedObject(delegate ,@"MKURLConnectionDelegate" ,proxy, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    return [self swizzled_initWithRequest:request delegate:(id)proxy startImmediately:startImmediately];
+    if (delegate) {
+        MKURLSessionDelegate* proxy = [[MKURLSessionDelegate alloc] initWithTarget:delegate];
+        objc_setAssociatedObject(delegate ,@"MKURLConnectionDelegate" ,proxy, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        return [self swizzled_initWithRequest:request delegate:(id)proxy startImmediately:startImmediately];
+    } else {
+        return [self swizzled_initWithRequest:request delegate:nil startImmediately:startImmediately];
+    }
 }
 
 @end
@@ -51,19 +59,19 @@
 + (void)startHook {
     [NSURLSession swizzledClassMethodOriginalSelector:@selector(sessionWithConfiguration:delegate:delegateQueue:) swizzledSelector:@selector(swizzled_sessionWithConfiguration:delegate:delegateQueue:)];
     
-    [NSURLConnection swizzledInstanceMethodOriginalSelector:@selector(initWithRequest:delegate:startImmediately:) swizzledSelector:@selector(swizzled_initWithRequest:delegate:startImmediately:)];
-    
-    /* Proxy的方式只实现了Delegate的监听，实例方法的调用需要单独Hook */
-    [self swizzledURLSessionAsynchronousTask];
-    
-    /* Proxy的方式只实现了Delegate的监听，类方法sendAsync与sendSync需要单独Hook（NSURLConnection官方已经弃用） */
-    [self swizzledURLConnectionSendAsynchronous];
-    [self swizzledURLConnectionSendSynchronous];
-    
     /* Proxy的方式也可以通过Hook具体类的URLSessionDelegate方法实现监听（["ClassA", "ClassB"]）
     [self swizzledURLSessionIntoClass:NSClassFromString(@"DownloadTaskQueue")];
     [self swizzledURLSessionIntoClass:NSClassFromString(@"AFURLSessionManager")];
     */
+    
+    [NSURLConnection swizzledInstanceMethodOriginalSelector:@selector(initWithRequest:delegate:startImmediately:) swizzledSelector:@selector(swizzled_initWithRequest:delegate:startImmediately:)];
+    
+    /* URLSession实例方法的调用需要单独Hook */
+    [self swizzledURLSessionAsynchronousTask];
+    
+    /* URLConnection类方法sendAsync与sendSync需要单独Hook（NSURLConnection官方已经弃用） */
+    [self swizzledURLConnectionSendAsynchronous];
+    [self swizzledURLConnectionSendSynchronous];
 }
 
 #pragma mark - URLSession实例方法的监听 -
@@ -157,6 +165,8 @@
         [self swizzledURLSessionDidReceiveDataIntoClass:cls];
         [self swizzledURLSessionDidReceiveResponseIntoClass:cls];
         [self swizzledURLSessionDidCompleteWithErrorIntoClass:cls];
+        [self swizzledURLSessionWillPerformHTTPRedirectionIntoClass:cls];
+        [self swizzledURLSessionDidFinishCollectingMetricsIntoClass:cls];
     }
 }
 
@@ -174,8 +184,6 @@
     typedef void (^NSURLSessionDidReceiveResponseBlock)(id <NSURLSessionDataDelegate> t_self, NSURLSession *session, NSURLSessionDataTask *dataTask, NSURLResponse *response, void(^completionHandler)(NSURLSessionResponseDisposition));
     
     NSURLSessionDidReceiveResponseBlock undefinedBlock = ^(id <NSURLSessionDataDelegate> t_self, NSURLSession *session, NSURLSessionDataTask *dataTask, NSURLResponse *response, void(^completionHandler)(NSURLSessionResponseDisposition)) {
-        /// 回调处理
-        
         /// do something
     };
     
@@ -200,15 +208,13 @@
     
     struct objc_method_description methodDescription =  protocol_getMethodDescription(protocol, selector, NO, YES);
     
-    typedef void (^NSURLSessionDidReceiveResponseBlock)(id <NSURLSessionDataDelegate> t_self, NSURLSession *session, NSURLSessionDataTask *dataTask, NSData *data);
+    typedef void (^NSURLSessionDidReceiveDataBlock)(id <NSURLSessionDataDelegate> t_self, NSURLSession *session, NSURLSessionDataTask *dataTask, NSData *data);
     
-    NSURLSessionDidReceiveResponseBlock undefinedBlock = ^(id <NSURLSessionDataDelegate> t_self, NSURLSession *session, NSURLSessionDataTask *dataTask, NSData *data) {
-        /// 回调处理
-        
+    NSURLSessionDidReceiveDataBlock undefinedBlock = ^(id <NSURLSessionDataDelegate> t_self, NSURLSession *session, NSURLSessionDataTask *dataTask, NSData *data) {
         /// do something
     };
     
-    NSURLSessionDidReceiveResponseBlock implementationBlock = ^(id <NSURLSessionDataDelegate> t_self, NSURLSession *session, NSURLSessionDataTask *dataTask, NSData *data) {
+    NSURLSessionDidReceiveDataBlock implementationBlock = ^(id <NSURLSessionDataDelegate> t_self, NSURLSession *session, NSURLSessionDataTask *dataTask, NSData *data) {
         /// 调用原IMP
         ((void(*)(id, SEL, ...))objc_msgSend)(t_self, swizzledSelector, session, dataTask, data);
         
@@ -230,17 +236,71 @@
     
     struct objc_method_description methodDescription =  protocol_getMethodDescription(protocol, selector, NO, YES);
     
-    typedef void (^NSURLSessionDidReceiveResponseBlock)(id <NSURLSessionDataDelegate> t_self, NSURLSession *session, NSURLSessionTask *task, NSError *error);
+    typedef void (^NSURLSessionDidCompleteWithErrorBlock)(id <NSURLSessionDataDelegate> t_self, NSURLSession *session, NSURLSessionTask *task, NSError *error);
     
-    NSURLSessionDidReceiveResponseBlock undefinedBlock = ^(id <NSURLSessionDataDelegate> t_self, NSURLSession *session, NSURLSessionTask *task, NSError *error) {
-        /// 回调处理
+    NSURLSessionDidCompleteWithErrorBlock undefinedBlock = ^(id <NSURLSessionDataDelegate> t_self, NSURLSession *session, NSURLSessionTask *task, NSError *error) {
+        /// do something
+    };
+    
+    NSURLSessionDidCompleteWithErrorBlock implementationBlock = ^(id <NSURLSessionDataDelegate> t_self, NSURLSession *session, NSURLSessionTask *task, NSError *error) {
+        /// 调用原IMP
+        ((void(*)(id, SEL, ...))objc_msgSend)(t_self, swizzledSelector, session, task, error);
         
         /// do something
     };
     
-    NSURLSessionDidReceiveResponseBlock implementationBlock = ^(id <NSURLSessionDataDelegate> t_self, NSURLSession *session, NSURLSessionTask *task, NSError *error) {
+    [MKHookUtil replaceImplementationOfSelector:selector swizzledSelector:swizzledSelector cls:cls methodDescription:methodDescription implementationBlock:implementationBlock undefinedBlock:undefinedBlock];
+}
+
++ (void)swizzledURLSessionWillPerformHTTPRedirectionIntoClass:(Class)cls {
+    SEL selector = @selector(URLSession:task:willPerformHTTPRedirection:newRequest:completionHandler:);
+    SEL swizzledSelector = [MKHookUtil swizzledSelectorForSelector:selector];
+    
+    Protocol *protocol = @protocol(NSURLSessionTaskDelegate);
+    if (!protocol) {
+        protocol = @protocol(NSURLSessionDelegate);
+    }
+    
+    struct objc_method_description methodDescription =  protocol_getMethodDescription(protocol, selector, NO, YES);
+    
+    typedef void (^NSURLSessionWillPerformHTTPRedirectionBlock)(id <NSURLSessionTaskDelegate> slf, NSURLSession *session, NSURLSessionTask *task, NSHTTPURLResponse *response, NSURLRequest *newRequest, void(^completionHandler)(NSURLRequest *));
+    
+    NSURLSessionWillPerformHTTPRedirectionBlock undefinedBlock = ^(id <NSURLSessionTaskDelegate> slf, NSURLSession *session, NSURLSessionTask *task, NSHTTPURLResponse *response, NSURLRequest *newRequest, void(^completionHandler)(NSURLRequest *)) {
+        completionHandler(newRequest);
+        
+        /// do something
+    };
+    
+    NSURLSessionWillPerformHTTPRedirectionBlock implementationBlock = ^(id <NSURLSessionTaskDelegate> slf, NSURLSession *session, NSURLSessionTask *task, NSHTTPURLResponse *response, NSURLRequest *newRequest, void(^completionHandler)(NSURLRequest *)) {
         /// 调用原IMP
-        ((void(*)(id, SEL, ...))objc_msgSend)(t_self, swizzledSelector, session, task, error);
+        ((void(*)(id, SEL, ...))objc_msgSend)(slf, swizzledSelector, session, task, response, newRequest, completionHandler);
+        
+        /// do something
+    };
+    
+    [MKHookUtil replaceImplementationOfSelector:selector swizzledSelector:swizzledSelector cls:cls methodDescription:methodDescription implementationBlock:implementationBlock undefinedBlock:undefinedBlock];
+}
+
++ (void)swizzledURLSessionDidFinishCollectingMetricsIntoClass:(Class)cls {
+    SEL selector = @selector(URLSession:task:didFinishCollectingMetrics:);
+    SEL swizzledSelector = [MKHookUtil swizzledSelectorForSelector:selector];
+    
+    Protocol *protocol = @protocol(NSURLSessionTaskDelegate);
+    if (!protocol) {
+        protocol = @protocol(NSURLSessionDelegate);
+    }
+    
+    struct objc_method_description methodDescription =  protocol_getMethodDescription(protocol, selector, NO, YES);
+    
+    typedef void (^NSURLSessionTaskDidFinishCollectingMetricsBlock)(id <NSURLSessionTaskDelegate> slf, NSURLSession *session, NSURLSessionTask *task, NSURLSessionTaskMetrics *metrics);
+    
+    NSURLSessionTaskDidFinishCollectingMetricsBlock undefinedBlock = ^(id <NSURLSessionTaskDelegate> slf, NSURLSession *session, NSURLSessionTask *task, NSURLSessionTaskMetrics *metrics) {
+        /// do something
+    };
+    
+    NSURLSessionTaskDidFinishCollectingMetricsBlock implementationBlock = ^(id <NSURLSessionTaskDelegate> slf, NSURLSession *session, NSURLSessionTask *task, NSURLSessionTaskMetrics *metrics) {
+        /// 调用原IMP
+        ((void(*)(id, SEL, ...))objc_msgSend)(slf, swizzledSelector, session, task, metrics);
         
         /// do something
     };
