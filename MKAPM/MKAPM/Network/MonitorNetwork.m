@@ -68,6 +68,7 @@
     
     /* URLSession实例方法的调用需要单独Hook */
     [self swizzledURLSessionAsynchronousTask];
+    [self swizzledURLSessionTaskResume];
     
     /* URLConnection类方法sendAsync与sendSync需要单独Hook（NSURLConnection官方已经弃用） */
     [self swizzledURLConnectionSendAsynchronous];
@@ -111,6 +112,30 @@
             };
             [MKHookUtil replaceImplementationOfKnownSelector:selector swizzledSelector:swizzledSelector cls:class implementationBlock:asynchronousTaskSwizzleBlock];
         }
+    });
+}
+
++ (void)swizzledURLSessionTaskResume {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        Class class = Nil;
+        if (@available(iOS 14.0, *)) {
+            /// NSURLSessionTask： iOS 14之后 & iOS 8（已不做适配）
+            class = [NSURLSessionTask class];
+        } else {
+            class = NSClassFromString([@[@"__", @"NSC", @"FURLS", @"ession", @"Task"] componentsJoinedByString:@""]);
+        }
+        SEL selector = @selector(resume);
+        SEL swizzledSelector = [MKHookUtil swizzledSelectorForSelector:selector];
+        
+        void (^swizzleBlock)(NSURLSessionTask *) = ^(NSURLSessionTask *slf) {
+            /// 调用原IMP
+            ((void(*)(id, SEL))objc_msgSend)(slf, swizzledSelector);
+            
+            /// do something
+        };
+        
+        [MKHookUtil replaceImplementationOfKnownSelector:selector swizzledSelector:swizzledSelector cls:class implementationBlock:swizzleBlock];
     });
 }
 
