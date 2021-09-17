@@ -118,13 +118,9 @@
 + (void)swizzledURLSessionTaskResume {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        Class class = Nil;
-        if (@available(iOS 14.0, *)) {
-            /// NSURLSessionTask： iOS 14之后 & iOS 8（已不做适配）
-            class = [NSURLSessionTask class];
-        } else {
-            class = NSClassFromString([@[@"__", @"NSC", @"FURLS", @"ession", @"Task"] componentsJoinedByString:@""]);
-        }
+        NSURLSessionDataTask *localDataTask = [[NSURLSession sharedSession] dataTaskWithURL:[NSURL URLWithString:@""]];
+        Class class = [localDataTask class];
+        
         SEL selector = @selector(resume);
         SEL swizzledSelector = [MKHookUtil swizzledSelectorForSelector:selector];
         
