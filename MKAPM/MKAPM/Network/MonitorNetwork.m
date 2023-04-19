@@ -118,8 +118,7 @@
 + (void)swizzledURLSessionTaskResume {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        NSURLSessionDataTask *localDataTask = [[NSURLSession sharedSession] dataTaskWithURL:[NSURL URLWithString:@""]];
-        Class class = [localDataTask class];
+        Class class = [NSURLSessionTask class];
         
         SEL selector = @selector(resume);
         SEL swizzledSelector = [MKHookUtil swizzledSelectorForSelector:selector];
