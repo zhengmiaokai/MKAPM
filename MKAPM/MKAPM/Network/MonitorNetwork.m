@@ -119,7 +119,6 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         Class class = [NSURLSessionTask class];
-        
         SEL selector = @selector(resume);
         SEL swizzledSelector = [MKHookUtil swizzledSelectorForSelector:selector];
         
