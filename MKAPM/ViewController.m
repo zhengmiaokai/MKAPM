@@ -24,10 +24,10 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     /// 网络监听
-    [MonitorNetwork startHook];
+    [MonitorNetwork startMonitoring];
     
     /// 卡顿监听
-    [[CatchANR shareInstance] startListen];
+    [[CatchANR shareInstance] startMonitoring];
     
     /// 闪退监听
     [CatchCrash setUncaughtExceptionHandler];
