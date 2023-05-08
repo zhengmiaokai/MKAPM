@@ -13,8 +13,8 @@
 
 + (instancetype)shareInstance;
 
-- (void)startListen;
+- (void)startMonitoring;
 
-- (void)endListen;
+- (void)stopMonitoring;
 
 @end
