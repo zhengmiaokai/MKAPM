@@ -44,17 +44,7 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
     dispatch_semaphore_signal(semaphore);
 }
 
-- (void)endListen {
-    if (!_observer) {
-        return;
-    }
-    
-    CFRunLoopRemoveObserver(CFRunLoopGetMain(), _observer, kCFRunLoopCommonModes);
-    CFRelease(_observer);
-    _observer = NULL;
-}
-
-- (void)startListen {
+- (void)startMonitoring {
     if (_observer) {
         return;
     }
@@ -93,6 +83,16 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
             self->_timeoutCount = 0;
         }
     });
+}
+
+- (void)stopMonitoring {
+    if (!_observer) {
+        return;
+    }
+    
+    CFRunLoopRemoveObserver(CFRunLoopGetMain(), _observer, kCFRunLoopCommonModes);
+    CFRelease(_observer);
+    _observer = NULL;
 }
 
 - (void)crashReporter {
