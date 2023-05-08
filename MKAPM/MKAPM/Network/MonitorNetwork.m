@@ -56,7 +56,7 @@
 
 @implementation MonitorNetwork
 
-+ (void)startHook {
++ (void)startMonitoring {
     [NSURLSession swizzledClassMethodOriginalSelector:@selector(sessionWithConfiguration:delegate:delegateQueue:) swizzledSelector:@selector(swizzled_sessionWithConfiguration:delegate:delegateQueue:)];
     
     /* Proxy的方式也可以通过Hook具体类的URLSessionDelegate方法实现监听（["ClassA", "ClassB"]）
