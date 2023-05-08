@@ -17,8 +17,6 @@ typedef void(^CatchFPSBlock)(float fps);
 
 - (void)startMonitoring;
 
-- (void)pauseMonitoring;
-
-- (void)removeMonitoring;
+- (void)stopMonitoring;
 
 @end
