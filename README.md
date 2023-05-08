@@ -4,6 +4,24 @@
 
 #### 简单的功能实现，后续迭代完善
 
-![image](https://user-images.githubusercontent.com/13111933/121005063-f9e3bf00-c7c1-11eb-84a2-e037a914f2c5.png)
+```objective-c
+/// 网络监听
+[MonitorNetwork startMonitoring];
+    
+/// 卡顿监听
+[[CatchANR shareInstance] startMonitoring];
+    
+/// 闪退监听
+[CatchCrash setUncaughtExceptionHandler];
+    
+/// FPS检测
+__weak typeof(self) weakSelf = self;
+[[CatchFPS shareInstance] setFPSBlock:^(float fps) {
+    __strong typeof(weakSelf) strongSelf = self;
+    strongSelf.fpsView.contextLab.text = [NSString stringWithFormat:@"%d FPS",(int)roundf(fps)];
+}];
+    
+[[CatchFPS shareInstance] startMonitoring];
+```
 
 #### IOS性能优化 - 分析&应用：https://blog.csdn.net/z119901214/article/details/120403321
