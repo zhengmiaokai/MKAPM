@@ -23,42 +23,30 @@
 @implementation CatchFPS
 
 + (instancetype)shareInstance {
-    static CatchFPS *mgr = nil;
+    static CatchFPS *instance = nil;
     static dispatch_once_t once;
     dispatch_once(&once, ^{
-        mgr = [[self alloc] init];
+        instance = [[self alloc] init];
     });
-    return mgr;
+    return instance;
 }
 
-- (instancetype)init {
-    self = [super init];
-    if (self) {
-        _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayLinkTick:)];
-        [_displayLink setPaused:YES];
+- (void)startMonitoring {
+    if (!_displayLink) {
+        self.displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayLinkTick:)];
         [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
     }
-    return self;
 }
 
-- (void)startMonitoring{
-    _displayLink.paused = NO;
+- (void)stopMonitoring {
+    if (_displayLink) {
+        [_displayLink invalidate];
+        self.displayLink = nil;
+    }
 }
 
-- (void)pauseMonitoring {
-    _displayLink.paused = YES;
-}
-
-- (void)removeMonitoring {
-    [self pauseMonitoring];
-    [_displayLink removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
-    [_displayLink invalidate];
-}
-
-#pragma mark -- Event Handle
-
+#pragma mark - Event Handle -
 - (void)displayLinkTick:(CADisplayLink *)link {
-    
     if (_beginTime == 0) {
         self.beginTime = link.timestamp;
         return;
@@ -67,13 +55,11 @@
     self.timeCount++;
     
     NSTimeInterval interval = link.timestamp - _beginTime;
-    
     if (interval < 1) { //每秒
         return;
     }
 
     float fps = _timeCount / interval;
-    
     if (_FPSBlock != nil) {
         _FPSBlock(fps);
     }
@@ -83,7 +69,7 @@
 }
 
 - (void)dealloc {
-    [self removeMonitoring];
+    [self stopMonitoring];
 }
 
 @end
