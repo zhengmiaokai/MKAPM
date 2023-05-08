@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MonitorNetwork : NSObject <NSURLSessionDataDelegate>
 
-+ (void)startHook;
++ (void)startMonitoring;
 
 @end
 
