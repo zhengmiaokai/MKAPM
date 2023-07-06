@@ -19,7 +19,6 @@
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-        
         UILabel *contextLab = [[UILabel alloc] initWithFrame:CGRectMake((self.width - 80)/2, kStatusBarHeight, 80, 36)];
         contextLab.textAlignment = NSTextAlignmentCenter;
         contextLab.layer.cornerRadius = 6;
@@ -47,7 +46,6 @@
 }
 
 - (void)handleGesture:(UIPanGestureRecognizer *)panGesture {
-
     switch (panGesture.state) {
         case UIGestureRecognizerStateBegan:
             break;

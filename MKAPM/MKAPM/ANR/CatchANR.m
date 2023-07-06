@@ -7,18 +7,14 @@
 //
 
 #import "CatchANR.h"
-#import <libkern/OSAtomic.h>
 #import <execinfo.h>
-#import <CrashReporter/CrashReporter.h>
 
 static int kTimeoutInterval = 400;  /// 单次定时器触发时间（毫秒）
-static int kTimeoutCount = 5;       /// 定时器触发次数，总时间为timeout * timeoutCount
+static int kTimeoutCount = 5;       /// 定时器触发次数，卡顿阈值：timeoutInterval * timeoutCount
 
 @interface CatchANR () {
     int _timeoutCount;
     CFRunLoopObserverRef _observer;
-    
-    @public
     dispatch_semaphore_t _semaphore;
     CFRunLoopActivity _activity;
 }
@@ -28,12 +24,12 @@ static int kTimeoutCount = 5;       /// 定时器触发次数，总时间为time
 @implementation CatchANR
 
 + (instancetype)shareInstance {
-    static CatchANR *mgr = nil;
+    static CatchANR *instance = nil;
     static dispatch_once_t once;
     dispatch_once(&once, ^{
-        mgr = [[self alloc] init];
+        instance = [[self alloc] init];
     });
-    return mgr;
+    return instance;
 }
 
 static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info) {
@@ -51,7 +47,7 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
     
     _semaphore = dispatch_semaphore_create(0);
     
-    CFRunLoopObserverContext context = {0,(__bridge void*)self,NULL,NULL};
+    CFRunLoopObserverContext context = {0, (__bridge void *)self, NULL, NULL};
     _observer = CFRunLoopObserverCreate(kCFAllocatorDefault,
                                         kCFRunLoopAllActivities,
                                         YES,
@@ -62,9 +58,9 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         while (YES) {
-            /// 如果间隔大于kTimeoutInterval，st!=0
-            long st = dispatch_semaphore_wait(self->_semaphore, dispatch_time(DISPATCH_TIME_NOW, kTimeoutInterval * NSEC_PER_MSEC));
-            if (st != 0) {
+            /// 间隔大于kTimeoutInterval，err!=0
+            long err = dispatch_semaphore_wait(self->_semaphore, dispatch_time(DISPATCH_TIME_NOW, kTimeoutInterval * NSEC_PER_MSEC));
+            if (err != 0) {
                 if (!self->_observer) {
                     self->_timeoutCount = 0;
                     self->_semaphore = 0;
@@ -76,8 +72,8 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
                     if (++self->_timeoutCount < kTimeoutCount) {
                         continue;
                     }
-                    [self crashReporter];
-                    /* [self logStack]; */
+                    // 上报导致卡顿的堆栈信息
+                    [self reportStackInfo];
                 }
             }
             self->_timeoutCount = 0;
@@ -95,27 +91,16 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
     _observer = NULL;
 }
 
-- (void)crashReporter {
-    PLCrashReporterConfig *config = [[PLCrashReporterConfig alloc] initWithSignalHandlerType:PLCrashReporterSignalHandlerTypeBSD symbolicationStrategy:PLCrashReporterSymbolicationStrategyAll];
-    PLCrashReporter *crashReporter = [[PLCrashReporter alloc] initWithConfiguration:config];
-    
-    NSData *data = [crashReporter generateLiveReport];
-    PLCrashReport *reporter = [[PLCrashReport alloc] initWithData:data error:NULL];
-    NSString *report = [PLCrashReportTextFormatter stringValueForCrashReport:reporter withTextFormat:PLCrashReportTextFormatiOS];
-    NSLog(@"[self crashReporter]:%@\n", report);
-}
-
-- (void)logStack {
-    void* callstack[128];
+- (void)reportStackInfo {
+    void *callstack[128];
     int frames = backtrace(callstack, 128);
-    char **strs = backtrace_symbols(callstack, frames);
-    int i;
-    NSMutableArray* backtrace = [NSMutableArray arrayWithCapacity:frames];
-    for ( i = 0 ; i < frames ; i++ ){
-        [backtrace addObject:[NSString stringWithUTF8String:strs[i]]];
+    char **cbacktrace = backtrace_symbols(callstack, frames);
+    NSMutableArray *backtrace = [NSMutableArray arrayWithCapacity:frames];
+    for (int i=0 ; i<frames; i++) {
+        [backtrace addObject:[NSString stringWithUTF8String:cbacktrace[i]]];
     }
-    free(strs);
-    NSLog(@"[self logStack]:%@\n", [backtrace description]);
+    free(cbacktrace);
+    NSLog(@"Exception StackSymbols: %@\n", [backtrace description]);
 }
 
 @end
