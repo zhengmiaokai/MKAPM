@@ -10,6 +10,8 @@
 
 @interface CatchCrash : NSObject
 
-+ (void)setUncaughtExceptionHandler;
++ (void)startMonitoring;
+
++ (void)stopMonitoring;
 
 @end
