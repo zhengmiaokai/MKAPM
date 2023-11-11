@@ -12,7 +12,7 @@
 [[CatchANR shareInstance] startMonitoring];
     
 /// 闪退监听
-[CatchCrash setUncaughtExceptionHandler];
+[CatchCrash startMonitoring];
     
 /// FPS检测
 __weak typeof(self) weakSelf = self;
