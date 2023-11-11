@@ -30,7 +30,16 @@
     [[CatchANR shareInstance] startMonitoring];
     
     /// 闪退监听
-    [CatchCrash setUncaughtExceptionHandler];
+    [CatchCrash startMonitoring];
+    
+    /* 模拟Uncaught异常
+     [@[] objectAtIndex:0];
+     */
+    
+    /* 模拟野指针-signal异常（需要断开调试才能进入handler）
+     char* string = NULL;
+     char a = *(string+0);
+     */
     
     /// FPS检测
     __weak typeof(self) weakSelf = self;
