@@ -96,10 +96,13 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
     int frames = backtrace(callstack, 128);
     char **cbacktrace = backtrace_symbols(callstack, frames);
     NSMutableArray *backtrace = [NSMutableArray arrayWithCapacity:frames];
-    for (int i=0 ; i<frames; i++) {
+    
+    // 第一行为reportStackInfo的调用堆栈
+    for (int i=1 ; i<frames; i++) {
         [backtrace addObject:[NSString stringWithUTF8String:cbacktrace[i]]];
     }
     free(cbacktrace);
+    
     NSLog(@"Exception StackSymbols: %@\n", [backtrace description]);
 }
 
