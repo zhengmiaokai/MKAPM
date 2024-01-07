@@ -73,7 +73,7 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
                         continue;
                     }
                     // 上报导致卡顿的堆栈信息
-                    [self reportStackInfo];
+                    [self performSelectorOnMainThread:@selector(reportStackInfo) withObject:nil waitUntilDone:NO];
                 }
             }
             self->_timeoutCount = 0;
