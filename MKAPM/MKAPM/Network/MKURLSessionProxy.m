@@ -1,12 +1,12 @@
 //
-//  MKURLSessionDelegate.m
+//  MKURLSessionProxy.m
 //  Basic
 //
 //  Created by mikazheng on 2019/11/13.
 //  Copyright © 2019 zhengmiaokai. All rights reserved.
 //
 
-#import "MKURLSessionDelegate.h"
+#import "MKURLSessionProxy.h"
 
 NSString *const MKURLSessionDataTaskDidReceiveResponse = @"URLSession:dataTask:didReceiveResponse:completionHandler:";
 NSString *const MKURLSessionDataTaskDidReceiveData = @"URLSession:dataTask:didReceiveData:";
@@ -14,7 +14,7 @@ NSString *const MKURLSessionTaskDidCompleteWithError = @"URLSession:task:didComp
 NSString *const MKURLSessionDataTaskDidFinishCollectingMetrics = @"URLSession:task:didFinishCollectingMetrics:";
 NSString *const MKURLSessionDataTaskWillPerformHTTPRedirection = @"URLSession:task:willPerformHTTPRedirection:newRequest:completionHandler:";
 
-@implementation MKURLSessionDelegate
+@implementation MKURLSessionProxy
 
 - (void)forwardInvocation:(NSInvocation *)invocation {
     [super forwardInvocation:invocation];
@@ -25,7 +25,7 @@ NSString *const MKURLSessionDataTaskWillPerformHTTPRedirection = @"URLSession:ta
         __unsafe_unretained NSError *error;
         [invocation getArgument:&error atIndex:4];
         if(task){
-            /// 数据收集
+            // 数据收集
             NSLog(@"MKURLSessionTaskDidCompleteWithError: %@", task.currentRequest.URL);
         }
     } else if ([NSStringFromSelector(invocation.selector) isEqualToString:MKURLSessionDataTaskDidReceiveData]) {
@@ -34,7 +34,7 @@ NSString *const MKURLSessionDataTaskWillPerformHTTPRedirection = @"URLSession:ta
         __unsafe_unretained NSData *data;
         [invocation getArgument:&data atIndex:4];
         if(dataTask && data){
-            /// 数据收集
+            // 数据收集
             NSLog(@"MKURLSessionDataTaskDidReceiveData: %@", dataTask.currentRequest.URL);
         }
     } else if ([NSStringFromSelector(invocation.selector) isEqualToString:MKURLSessionDataTaskDidReceiveResponse]) {
@@ -42,8 +42,9 @@ NSString *const MKURLSessionDataTaskWillPerformHTTPRedirection = @"URLSession:ta
         [invocation getArgument:&dataTask atIndex:3];
         __unsafe_unretained NSHTTPURLResponse *response;
         [invocation getArgument:&response atIndex:4];
+    
         if(dataTask && response){
-            /// 数据收集
+            // 数据收集
             NSLog(@"MKURLSessionDataTaskDidReceiveResponse: %@", dataTask.currentRequest.URL);
         }
     } else if ([NSStringFromSelector(invocation.selector) isEqualToString:MKURLSessionDataTaskDidFinishCollectingMetrics]) {
@@ -52,10 +53,14 @@ NSString *const MKURLSessionDataTaskWillPerformHTTPRedirection = @"URLSession:ta
         __unsafe_unretained NSURLSessionTaskMetrics *taskMetrics;
         [invocation getArgument:&taskMetrics atIndex:4];
         if(task && taskMetrics){
-            /// 数据收集
+            // 数据收集
             NSLog(@"MKURLSessionDataTaskDidFinishCollectingMetrics: %@", task.currentRequest.URL);
-            NSURLSessionTaskTransactionMetrics* metrics = taskMetrics.transactionMetrics.firstObject;
-            if (metrics.response) {
+            
+            for (int i = 0; i < taskMetrics.transactionMetrics.count; ++i) {
+                NSURLSessionTaskTransactionMetrics *metrics = taskMetrics.transactionMetrics[i];
+                
+                if (metrics.resourceFetchType == NSURLSessionTaskMetricsResourceFetchTypeLocalCache) continue;
+                
                 NSDate* startDate = metrics.fetchStartDate;
                 long dnsTime = [metrics.domainLookupEndDate timeIntervalSinceDate:metrics.domainLookupStartDate] * 1000;
                 long ipConnectTime = [metrics.connectEndDate timeIntervalSinceDate:metrics.connectStartDate] * 1000;
@@ -85,8 +90,9 @@ NSString *const MKURLSessionDataTaskWillPerformHTTPRedirection = @"URLSession:ta
         [invocation getArgument:&dataTask atIndex:3];
         __unsafe_unretained NSHTTPURLResponse *response;
         [invocation getArgument:&response atIndex:4];
+        
         if(dataTask && response){
-            /// 数据收集
+            // 数据收集
             NSLog(@"MKURLSessionDataTaskWillPerformHTTPRedirection: %@", dataTask.currentRequest.URL);
         }
     }

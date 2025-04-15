@@ -6,11 +6,9 @@
 //  Copyright © 2019 zhengmiaokai. All rights reserved.
 //
 
-/****** Proxy基类，可以实现delegate的AOP（面向切面编程）<如果target实现了respondsToSelector方法，子类实现respondsToSelector时需要注意方法兼容> ******/
+/** Proxy基类：delegate的切面编程、代理对象的弱引用 <如果target实现了respondsToSelector方法，子类重写respondsToSelector需要注意兼容性> **/
 
 #import <Foundation/Foundation.h>
-
-NS_ASSUME_NONNULL_BEGIN
 
 @interface MKProxy : NSProxy
 
@@ -19,5 +17,3 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithTarget:(id)target;
 
 @end
-
-NS_ASSUME_NONNULL_END

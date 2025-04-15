@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		03750BCC2DAE01F400BFDA49 /* DataRequester.m in Sources */ = {isa = PBXBuildFile; fileRef = 03750BCB2DAE01F400BFDA49 /* DataRequester.m */; };
 		D5EF0CA0266E243C00BFC76C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0C9F266E243C00BFC76C /* AppDelegate.m */; };
 		D5EF0CA3266E243C00BFC76C /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0CA2266E243C00BFC76C /* SceneDelegate.m */; };
 		D5EF0CA6266E243C00BFC76C /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0CA5266E243C00BFC76C /* ViewController.m */; };
@@ -15,8 +16,8 @@
 		D5EF0CAE266E244000BFC76C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D5EF0CAC266E244000BFC76C /* LaunchScreen.storyboard */; };
 		D5EF0CB1266E244000BFC76C /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0CB0266E244000BFC76C /* main.m */; };
 		D5EF0CCD266E247200BFC76C /* CatchANR.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0CBC266E247100BFC76C /* CatchANR.m */; };
-		D5EF0CCE266E247200BFC76C /* MKURLConnectionDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0CBE266E247100BFC76C /* MKURLConnectionDelegate.m */; };
-		D5EF0CCF266E247200BFC76C /* MKURLSessionDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0CBF266E247100BFC76C /* MKURLSessionDelegate.m */; };
+		D5EF0CCE266E247200BFC76C /* MKURLConnectionProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0CBE266E247100BFC76C /* MKURLConnectionProxy.m */; };
+		D5EF0CCF266E247200BFC76C /* MKURLSessionProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0CBF266E247100BFC76C /* MKURLSessionProxy.m */; };
 		D5EF0CD0266E247200BFC76C /* MonitorNetwork.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0CC3266E247100BFC76C /* MonitorNetwork.m */; };
 		D5EF0CD1266E247200BFC76C /* CatchCrash.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0CC6266E247100BFC76C /* CatchCrash.m */; };
 		D5EF0CD2266E247200BFC76C /* CatchFPSView.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0CC8266E247100BFC76C /* CatchFPSView.m */; };
@@ -30,6 +31,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		03750BCA2DAE01F400BFDA49 /* DataRequester.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DataRequester.h; sourceTree = "<group>"; };
+		03750BCB2DAE01F400BFDA49 /* DataRequester.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DataRequester.m; sourceTree = "<group>"; };
 		D5EF0C9B266E243C00BFC76C /* MKAPM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MKAPM.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D5EF0C9E266E243C00BFC76C /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		D5EF0C9F266E243C00BFC76C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -44,11 +47,11 @@
 		D5EF0CB0266E244000BFC76C /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		D5EF0CBA266E247100BFC76C /* CatchANR.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CatchANR.h; sourceTree = "<group>"; };
 		D5EF0CBC266E247100BFC76C /* CatchANR.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CatchANR.m; sourceTree = "<group>"; };
-		D5EF0CBE266E247100BFC76C /* MKURLConnectionDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MKURLConnectionDelegate.m; sourceTree = "<group>"; };
-		D5EF0CBF266E247100BFC76C /* MKURLSessionDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MKURLSessionDelegate.m; sourceTree = "<group>"; };
+		D5EF0CBE266E247100BFC76C /* MKURLConnectionProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MKURLConnectionProxy.m; sourceTree = "<group>"; };
+		D5EF0CBF266E247100BFC76C /* MKURLSessionProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MKURLSessionProxy.m; sourceTree = "<group>"; };
 		D5EF0CC0266E247100BFC76C /* MonitorNetwork.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MonitorNetwork.h; sourceTree = "<group>"; };
-		D5EF0CC1266E247100BFC76C /* MKURLConnectionDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MKURLConnectionDelegate.h; sourceTree = "<group>"; };
-		D5EF0CC2266E247100BFC76C /* MKURLSessionDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MKURLSessionDelegate.h; sourceTree = "<group>"; };
+		D5EF0CC1266E247100BFC76C /* MKURLConnectionProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MKURLConnectionProxy.h; sourceTree = "<group>"; };
+		D5EF0CC2266E247100BFC76C /* MKURLSessionProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MKURLSessionProxy.h; sourceTree = "<group>"; };
 		D5EF0CC3266E247100BFC76C /* MonitorNetwork.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MonitorNetwork.m; sourceTree = "<group>"; };
 		D5EF0CC5266E247100BFC76C /* CatchCrash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CatchCrash.h; sourceTree = "<group>"; };
 		D5EF0CC6266E247100BFC76C /* CatchCrash.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CatchCrash.m; sourceTree = "<group>"; };
@@ -106,6 +109,8 @@
 				D5EF0CA2266E243C00BFC76C /* SceneDelegate.m */,
 				D5EF0CA4266E243C00BFC76C /* ViewController.h */,
 				D5EF0CA5266E243C00BFC76C /* ViewController.m */,
+				03750BCA2DAE01F400BFDA49 /* DataRequester.h */,
+				03750BCB2DAE01F400BFDA49 /* DataRequester.m */,
 				D5EF0CA7266E243C00BFC76C /* Main.storyboard */,
 				D5EF0CB8266E247100BFC76C /* MKAPM */,
 				D5EF0CAA266E244000BFC76C /* Assets.xcassets */,
@@ -143,10 +148,10 @@
 			children = (
 				D5EF0CC0266E247100BFC76C /* MonitorNetwork.h */,
 				D5EF0CC3266E247100BFC76C /* MonitorNetwork.m */,
-				D5EF0CC2266E247100BFC76C /* MKURLSessionDelegate.h */,
-				D5EF0CBF266E247100BFC76C /* MKURLSessionDelegate.m */,
-				D5EF0CC1266E247100BFC76C /* MKURLConnectionDelegate.h */,
-				D5EF0CBE266E247100BFC76C /* MKURLConnectionDelegate.m */,
+				D5EF0CC2266E247100BFC76C /* MKURLSessionProxy.h */,
+				D5EF0CBF266E247100BFC76C /* MKURLSessionProxy.m */,
+				D5EF0CC1266E247100BFC76C /* MKURLConnectionProxy.h */,
+				D5EF0CBE266E247100BFC76C /* MKURLConnectionProxy.m */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -269,7 +274,7 @@
 				D5EF0CED266E2B0400BFC76C /* UIView+Addition.m in Sources */,
 				D5EF0CD1266E247200BFC76C /* CatchCrash.m in Sources */,
 				D5EF0CE9266E2AAC00BFC76C /* UIColor+Addition.m in Sources */,
-				D5EF0CCE266E247200BFC76C /* MKURLConnectionDelegate.m in Sources */,
+				D5EF0CCE266E247200BFC76C /* MKURLConnectionProxy.m in Sources */,
 				D5EF0CA6266E243C00BFC76C /* ViewController.m in Sources */,
 				D5EF0CA0266E243C00BFC76C /* AppDelegate.m in Sources */,
 				D5EF0CD2266E247200BFC76C /* CatchFPSView.m in Sources */,
@@ -279,9 +284,10 @@
 				D5EF0CD0266E247200BFC76C /* MonitorNetwork.m in Sources */,
 				D5EF0CD3266E247200BFC76C /* CatchFPS.m in Sources */,
 				D5EF0CE0266E253200BFC76C /* UIDevice+Addition.m in Sources */,
+				03750BCC2DAE01F400BFDA49 /* DataRequester.m in Sources */,
 				D5EF0CD8266E24C500BFC76C /* NSObject+Additions.m in Sources */,
 				D5EF0CA3266E243C00BFC76C /* SceneDelegate.m in Sources */,
-				D5EF0CCF266E247200BFC76C /* MKURLSessionDelegate.m in Sources */,
+				D5EF0CCF266E247200BFC76C /* MKURLSessionProxy.m in Sources */,
 				D5EF0CDC266E250D00BFC76C /* MKHookUtil.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

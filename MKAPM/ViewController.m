@@ -11,10 +11,13 @@
 #import "MonitorNetwork.h"
 #import "CatchCrash.h"
 #import "CatchANR.h"
+#import "DataRequester.h"
 
 @interface ViewController ()
 
-@property (nonatomic, strong) CatchFPSView* fpsView;
+@property (nonatomic, strong) CatchFPSView *fpsView;
+
+@property (nonatomic, strong) DataRequester *requester;
 
 @end
 
@@ -50,22 +53,8 @@
     
     [[CatchFPS shareInstance] startMonitoring];
     
-    [self createRequest];
-}
-
-- (void)createRequest {
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        NSURLRequest* connectionReq = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"https://www.baidu.com"]];
-        [NSURLConnection sendAsynchronousRequest:connectionReq queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse * _Nullable response, NSData * _Nullable data, NSError * _Nullable connectionError) {
-
-        }];
-        
-        NSURLRequest* sessionReq = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"https://www.baidu.com"]];
-        NSURLSessionDataTask* dataTask = [[NSURLSession sharedSession] dataTaskWithRequest:sessionReq completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-        
-        }];
-        [dataTask  resume];
-    });
+    self.requester = [[DataRequester alloc] init];
+    [self.requester dataRequest];
 }
 
 - (CatchFPSView *)fpsView {
@@ -75,6 +64,5 @@
     }
     return _fpsView;
 }
-
 
 @end
