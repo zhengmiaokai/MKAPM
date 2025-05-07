@@ -109,7 +109,7 @@
                     }
                 };
                 
-                NSURLSessionTask *task = ((id(*)(id, SEL, id, id))objc_msgSend)(slf, swizzledSelector, argument, completionWrapper);
+                NSURLSessionTask *task = ((id(*)(id, SEL, id, MKURLSessionAsyncCompletion))objc_msgSend)(slf, swizzledSelector, argument, completionWrapper);
                 return task;
             };
             [MKHookUtil replaceImplementationOfKnownSelector:selector swizzledSelector:swizzledSelector cls:class implementationBlock:asynchronousTaskSwizzleBlock];
@@ -154,7 +154,7 @@
                     completion(response, data, connectionError);
                 }
             };
-            ((void(*)(id, SEL, id, id, id))objc_msgSend)(slf, swizzledSelector, request, queue, completionWrapper);
+            ((void(*)(id, SEL, NSURLRequest *, NSOperationQueue *, NSURLConnectionAsyncCompletion))objc_msgSend)(slf, swizzledSelector, request, queue, completionWrapper);
         };
         
         [MKHookUtil replaceImplementationOfKnownSelector:selector swizzledSelector:swizzledSelector cls:class implementationBlock:asyncSwizzleBlock];
@@ -217,7 +217,7 @@
         // recording data
         NSLog(@"MKURLSessionDataTaskDidReceiveResponse: %@", dataTask.currentRequest.URL);
         
-        ((void(*)(id, SEL, ...))objc_msgSend)(t_self, swizzledSelector, session, dataTask, response, completionHandler);
+        ((void(*)(id, SEL, NSURLSession *, NSURLSessionDataTask *, NSURLResponse *, void(^)(NSURLSessionResponseDisposition)))objc_msgSend)(t_self, swizzledSelector, session, dataTask, response, completionHandler);
     };
     
     [MKHookUtil replaceImplementationOfSelector:selector swizzledSelector:swizzledSelector cls:cls methodDescription:methodDescription implementationBlock:implementationBlock undefinedBlock:undefinedBlock];
@@ -244,7 +244,7 @@
         // recording data
         NSLog(@"MKURLSessionDataTaskDidReceiveData: %@", dataTask.currentRequest.URL);
         
-        ((void(*)(id, SEL, ...))objc_msgSend)(t_self, swizzledSelector, session, dataTask, data);
+        ((void(*)(id, SEL, NSURLSession *, NSURLSessionDataTask *, NSData *))objc_msgSend)(t_self, swizzledSelector, session, dataTask, data);
     };
     
     [MKHookUtil replaceImplementationOfSelector:selector swizzledSelector:swizzledSelector cls:cls methodDescription:methodDescription implementationBlock:implementationBlock undefinedBlock:undefinedBlock];
@@ -271,7 +271,7 @@
         // recording data
         NSLog(@"MKURLSessionTaskDidCompleteWithError: %@", task.currentRequest.URL);
         
-        ((void(*)(id, SEL, ...))objc_msgSend)(t_self, swizzledSelector, session, task, error);
+        ((void(*)(id, SEL, NSURLSession *, NSURLSessionTask *, NSError *))objc_msgSend)(t_self, swizzledSelector, session, task, error);
     };
     
     [MKHookUtil replaceImplementationOfSelector:selector swizzledSelector:swizzledSelector cls:cls methodDescription:methodDescription implementationBlock:implementationBlock undefinedBlock:undefinedBlock];
@@ -302,7 +302,7 @@
     NSURLSessionWillPerformHTTPRedirectionBlock implementationBlock = ^(id <NSURLSessionTaskDelegate> slf, NSURLSession *session, NSURLSessionTask *task, NSHTTPURLResponse *response, NSURLRequest *newRequest, void(^completionHandler)(NSURLRequest *)) {
         // recording data
         
-        ((void(*)(id, SEL, ...))objc_msgSend)(slf, swizzledSelector, session, task, response, newRequest, completionHandler);
+        ((void(*)(id, SEL, NSURLSession *, NSURLSessionTask *, NSHTTPURLResponse *, NSURLRequest *, void(^)(NSURLRequest *)))objc_msgSend)(slf, swizzledSelector, session, task, response, newRequest, completionHandler);
     };
     
     [MKHookUtil replaceImplementationOfSelector:selector swizzledSelector:swizzledSelector cls:cls methodDescription:methodDescription implementationBlock:implementationBlock undefinedBlock:undefinedBlock];
@@ -358,7 +358,7 @@
             */
         }
         
-        ((void(*)(id, SEL, ...))objc_msgSend)(slf, swizzledSelector, session, task, taskMetrics);
+        ((void(*)(id, SEL, NSURLSession *, NSURLSessionTask *, NSURLSessionTaskMetrics *))objc_msgSend)(slf, swizzledSelector, session, task, taskMetrics);
     };
     
     [MKHookUtil replaceImplementationOfSelector:selector swizzledSelector:swizzledSelector cls:cls methodDescription:methodDescription implementationBlock:implementationBlock undefinedBlock:undefinedBlock];
