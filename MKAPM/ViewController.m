@@ -2,7 +2,7 @@
 //  ViewController.m
 //  MKAPM
 //
-//  Created by mikazheng on 2021/6/7.
+//  Created by zhengmiaokai on 2021/6/7.
 //
 
 #import "ViewController.h"
@@ -25,14 +25,14 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view.
-    /// 网络监听
+    
+    // 网络监听
     [MonitorNetwork startMonitoring];
     
-    /// 卡顿监听
+    // 卡顿监听
     [[CatchANR shareInstance] startMonitoring];
     
-    /// 闪退监听
+    // 闪退监听
     [CatchCrash startMonitoring];
     
     /* 模拟Uncaught异常
@@ -44,7 +44,13 @@
      char a = *(string+0);
      */
     
-    /// FPS检测
+    /* 模拟卡顿异常
+     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+         sleep(3);
+     });
+     */
+    
+    // FPS检测
     __weak typeof(self) weakSelf = self;
     [[CatchFPS shareInstance] setFPSBlock:^(float fps) {
         __strong typeof(weakSelf) strongSelf = self;

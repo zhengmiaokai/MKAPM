@@ -2,21 +2,22 @@
 //  CatchANR.m
 //  Basic
 //
-//  Created by zhengmika on 2019/6/27.
+//  Created by zhengmiaokai on 2019/6/27.
 //  Copyright © 2019 zhengmiaokai. All rights reserved.
 //
 
 #import "CatchANR.h"
 #import <execinfo.h>
+#import <CrashReporter/CrashReporter.h>
 
-static int kTimeoutInterval = 400;  /// 单次定时器触发时间（毫秒）
-static int kTimeoutCount = 5;       /// 定时器触发次数，卡顿阈值：timeoutInterval * timeoutCount
+static int kTimeoutInterval = 400;  // 单次定时器触发时间（毫秒）
+static int kTimeoutCount = 5;       // 定时器触发次数，卡顿阈值：timeoutInterval * timeoutCount
 
 @interface CatchANR () {
-    int _timeoutCount;
     CFRunLoopObserverRef _observer;
     dispatch_semaphore_t _semaphore;
     CFRunLoopActivity _activity;
+    int _timeoutCount;
 }
 
 @end
@@ -28,15 +29,16 @@ static int kTimeoutCount = 5;       /// 定时器触发次数，卡顿阈值：t
     static dispatch_once_t once;
     dispatch_once(&once, ^{
         instance = [[self alloc] init];
+        instance->_semaphore = dispatch_semaphore_create(0);
     });
     return instance;
 }
 
 static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info) {
-    CatchANR* catchANR = (__bridge CatchANR*)info;
-    catchANR->_activity = activity;
+    CatchANR* instance = (__bridge CatchANR*)info;
+    instance->_activity = activity;
     
-    dispatch_semaphore_t semaphore = catchANR->_semaphore;
+    dispatch_semaphore_t semaphore = instance->_semaphore;
     dispatch_semaphore_signal(semaphore);
 }
 
@@ -44,8 +46,6 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
     if (_observer) {
         return;
     }
-    
-    _semaphore = dispatch_semaphore_create(0);
     
     CFRunLoopObserverContext context = {0, (__bridge void *)self, NULL, NULL};
     _observer = CFRunLoopObserverCreate(kCFAllocatorDefault,
@@ -57,23 +57,17 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
     CFRunLoopAddObserver(CFRunLoopGetMain(), _observer, kCFRunLoopCommonModes);
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        while (YES) {
-            /// 间隔大于kTimeoutInterval，err!=0
+        while (self->_observer != NULL) {
+            // 间隔大于kTimeoutInterval，err!=0
             long err = dispatch_semaphore_wait(self->_semaphore, dispatch_time(DISPATCH_TIME_NOW, kTimeoutInterval * NSEC_PER_MSEC));
             if (err != 0) {
-                if (!self->_observer) {
-                    self->_timeoutCount = 0;
-                    self->_semaphore = 0;
-                    self->_activity = 0;
-                    return;
-                }
-                
-                if (self->_activity == kCFRunLoopBeforeSources || self->_activity == kCFRunLoopAfterWaiting) {
+                if (self->_activity == kCFRunLoopBeforeSources || self->_activity == kCFRunLoopAfterWaiting) { // BeforeSources-即将处理事件 | AfterWaiting-从休眠中唤醒
                     if (++self->_timeoutCount < kTimeoutCount) {
                         continue;
                     }
-                    // 上报导致卡顿的堆栈信息
-                    [self performSelectorOnMainThread:@selector(reportStackInfo) withObject:nil waitUntilDone:NO];
+                    
+                    // 上报堆栈信息
+                    [self reportStackInfo];
                 }
             }
             self->_timeoutCount = 0;
@@ -82,28 +76,27 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
 }
 
 - (void)stopMonitoring {
-    if (!_observer) {
-        return;
-    }
+    _activity = 0;
+    _timeoutCount = 0;
     
-    CFRunLoopRemoveObserver(CFRunLoopGetMain(), _observer, kCFRunLoopCommonModes);
-    CFRelease(_observer);
-    _observer = NULL;
+    if (_observer) {
+        CFRunLoopRemoveObserver(CFRunLoopGetMain(), _observer, kCFRunLoopCommonModes);
+        CFRelease(_observer);
+        _observer = NULL;
+    }
 }
 
 - (void)reportStackInfo {
-    void *callstack[128];
-    int frames = backtrace(callstack, 128);
-    char **cbacktrace = backtrace_symbols(callstack, frames);
-    NSMutableArray *backtrace = [NSMutableArray arrayWithCapacity:frames];
+    PLCrashReporterConfig *config = [[PLCrashReporterConfig alloc] initWithSignalHandlerType:PLCrashReporterSignalHandlerTypeMach // 完整线程上下文
+                                                                       symbolicationStrategy:PLCrashReporterSymbolicationStrategyAll]; // 在Release环境下无效
+    PLCrashReporter *crashReporter = [[PLCrashReporter alloc] initWithConfiguration:config];
     
-    // 第一行为reportStackInfo的调用堆栈
-    for (int i=1 ; i<frames; i++) {
-        [backtrace addObject:[NSString stringWithUTF8String:cbacktrace[i]]];
-    }
-    free(cbacktrace);
+    NSData *data = [crashReporter generateLiveReport];
+    PLCrashReport *crashReport = [[PLCrashReport alloc] initWithData:data error:NULL];
+    NSString *stackInfo = [PLCrashReportTextFormatter stringValueForCrashReport:crashReport
+                                                              withTextFormat:PLCrashReportTextFormatiOS];
     
-    NSLog(@"Exception StackSymbols: %@\n", [backtrace description]);
+    NSLog(@"%@", stackInfo);
 }
 
 @end

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		03750BCC2DAE01F400BFDA49 /* DataRequester.m in Sources */ = {isa = PBXBuildFile; fileRef = 03750BCB2DAE01F400BFDA49 /* DataRequester.m */; };
+		03FD37A92EA9FE0A0093EF8A /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03FD37A72EA9FE0A0093EF8A /* CrashReporter.framework */; };
 		D5EF0CA0266E243C00BFC76C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0C9F266E243C00BFC76C /* AppDelegate.m */; };
 		D5EF0CA3266E243C00BFC76C /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0CA2266E243C00BFC76C /* SceneDelegate.m */; };
 		D5EF0CA6266E243C00BFC76C /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EF0CA5266E243C00BFC76C /* ViewController.m */; };
@@ -33,6 +34,7 @@
 /* Begin PBXFileReference section */
 		03750BCA2DAE01F400BFDA49 /* DataRequester.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DataRequester.h; sourceTree = "<group>"; };
 		03750BCB2DAE01F400BFDA49 /* DataRequester.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DataRequester.m; sourceTree = "<group>"; };
+		03FD37A72EA9FE0A0093EF8A /* CrashReporter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = CrashReporter.framework; sourceTree = "<group>"; };
 		D5EF0C9B266E243C00BFC76C /* MKAPM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MKAPM.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D5EF0C9E266E243C00BFC76C /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		D5EF0C9F266E243C00BFC76C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -78,12 +80,21 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				03FD37A92EA9FE0A0093EF8A /* CrashReporter.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		03FD37A82EA9FE0A0093EF8A /* Framework */ = {
+			isa = PBXGroup;
+			children = (
+				03FD37A72EA9FE0A0093EF8A /* CrashReporter.framework */,
+			);
+			path = Framework;
+			sourceTree = "<group>";
+		};
 		D5EF0C92266E243C00BFC76C = {
 			isa = PBXGroup;
 			children = (
@@ -130,6 +141,7 @@
 				D5EF0CBD266E247100BFC76C /* Network */,
 				D5EF0CC4266E247100BFC76C /* Crash */,
 				D5EF0CC7266E247100BFC76C /* FPS */,
+				03FD37A82EA9FE0A0093EF8A /* Framework */,
 			);
 			path = MKAPM;
 			sourceTree = "<group>";
@@ -435,13 +447,14 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/MKAPM/MKAPM/ANR",
+					"$(PROJECT_DIR)/MKAPM/MKAPM/Framework",
 				);
 				INFOPLIST_FILE = MKAPM/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = mikazheng.MKAPM;
+				PRODUCT_BUNDLE_IDENTIFIER = com.basic.MKAPM;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -456,13 +469,14 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/MKAPM/MKAPM/ANR",
+					"$(PROJECT_DIR)/MKAPM/MKAPM/Framework",
 				);
 				INFOPLIST_FILE = MKAPM/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = mikazheng.MKAPM;
+				PRODUCT_BUNDLE_IDENTIFIER = com.basic.MKAPM;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

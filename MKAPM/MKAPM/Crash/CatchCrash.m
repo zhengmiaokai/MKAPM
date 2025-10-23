@@ -1,12 +1,13 @@
 //
 //  CatchCrash.m
-//  Test
+//  Basic
 //
 //  Created by zhengmiaokai on 15/11/23.
 //  Copyright © 2015年 zhengmiaokai. All rights reserved.
 //
 
 #import "CatchCrash.h"
+#import <CrashReporter/CrashReporter.h>
 
 static NSUncaughtExceptionHandler *previousUncaughtExceptionHandler = NULL;
 
@@ -58,9 +59,9 @@ static void uncaughtExceptionHandler(NSException *exception) {
     NSArray *stackSymbols = [exception callStackSymbols];
     NSString *name = [exception name];
     NSString *reason = [exception reason];
-    NSString *exceptionInfo = [NSString stringWithFormat:@"Exception Name: %@\nException Reason: %@\nException StackSymbols: %@", name, reason, stackSymbols];
+    NSString *exceptionInfo = [NSString stringWithFormat:@"Uncaught Exception Name: %@\nReason: %@\nStackSymbols: %@", name, reason, stackSymbols];
     
-    //保存到本地  --  当然你可以在下次启动的时候，上传这个log
+    // 保存到本地 - 在下次启动的时候，上传这个log
     NSString *filePath = [NSString stringWithFormat:@"%@/Documents/uncaught-exception.log", NSHomeDirectory()];
     [exceptionInfo writeToFile:filePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
     
@@ -74,59 +75,20 @@ static void uncaughtExceptionHandler(NSException *exception) {
 }
 
 static void signalExceptionHandler(int signal) {
-    NSMutableString *exceptionInfo = [[NSMutableString alloc] init];
-    [exceptionInfo appendString:@"Signal Exception:\n"];
-    [exceptionInfo appendString:[NSString stringWithFormat:@"Signal %@ was raised.\n", signalName(signal)]];
-    [exceptionInfo appendString:@"Call Stack:\n"];
+    PLCrashReporterConfig *config = [[PLCrashReporterConfig alloc] initWithSignalHandlerType:PLCrashReporterSignalHandlerTypeMach // 完整线程上下文
+                                                                       symbolicationStrategy:PLCrashReporterSymbolicationStrategyAll]; // 在Release环境下无效
+    PLCrashReporter *crashReporter = [[PLCrashReporter alloc] initWithConfiguration:config];
     
-    // 因为注册了信号崩溃回调方法，系统会来调用，将记录在调用堆栈上，因此第一行日志需要过滤掉
-    for (NSUInteger index = 1; index < NSThread.callStackSymbols.count; index++) {
-        NSString *str = [NSThread.callStackSymbols objectAtIndex:index];
-        [exceptionInfo appendString:[str stringByAppendingString:@"\n"]];
-    }
+    NSData *data = [crashReporter generateLiveReport];
+    PLCrashReport *crashReport = [[PLCrashReport alloc] initWithData:data error:NULL];
+    NSString *exceptionInfo = [PLCrashReportTextFormatter stringValueForCrashReport:crashReport withTextFormat:PLCrashReportTextFormatiOS];
     
-    [exceptionInfo appendString:@"threadInfo:\n"];
-    [exceptionInfo appendString:[[NSThread currentThread] description]];
-    
-    //保存到本地  --  当然你可以在下次启动的时候，上传这个log
+    //保存到本地 - 在下次启动的时候，上传这个log
     NSString *filePath = [NSString stringWithFormat:@"%@/Documents/signal-exception.log", NSHomeDirectory()];
     [exceptionInfo writeToFile:filePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
     
     // 杀掉程序，防止同时抛出的SIGABRT被SignalException捕获
     kill(getpid(), SIGKILL);
-}
-
-static NSString *signalName(int signal) {
-    NSString *signalName;
-    switch (signal) {
-        case SIGSEGV:
-            signalName = @"SIGSEGV";
-            break;
-        case SIGFPE:
-            signalName = @"SIGFPE";
-            break;
-        case SIGBUS:
-            signalName = @"SIGBUS";
-            break;
-        case SIGTRAP:
-            signalName = @"SIGTRAP";
-            break;
-        case SIGABRT:
-            signalName = @"SIGABRT";
-            break;
-        case SIGILL:
-            signalName = @"SIGILL";
-            break;
-        case SIGPIPE:
-            signalName = @"SIGPIPE";
-            break;
-        case SIGSYS:
-            signalName = @"SIGSYS";
-            break;
-        default:
-            break;
-    }
-    return signalName;
 }
 
 @end

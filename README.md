@@ -23,5 +23,5 @@ __weak typeof(self) weakSelf = self;
     
 [[CatchFPS shareInstance] startMonitoring];
 ```
-
+ 
 #### IOS性能优化 - 分析&应用：https://blog.csdn.net/z119901214/article/details/120403321

@@ -1,9 +1,9 @@
 //
 //  MKHookUtil.m
-//  LMBModuleTool
+//  Basic
 //
 //  Created by zhengmiaokai on 16/9/10.
-//  Copyright © 2016年 辣妈帮. All rights reserved.
+//  Copyright © 2016年 zhengmiaokai. All rights reserved.
 //
 
 #import "MKHookUtil.h"
