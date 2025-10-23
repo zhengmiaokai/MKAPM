@@ -39,7 +39,7 @@
      [@[] objectAtIndex:0];
      */
     
-    /* 模拟野指针-signal异常（需要断开调试才能进入handler）
+    /* 模拟Signal异常（需要断开调试才能进入handler）
      char* string = NULL;
      char a = *(string+0);
      */
