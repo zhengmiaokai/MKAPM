@@ -12,62 +12,183 @@
 
 static NSUncaughtExceptionHandler *previousUncaughtExceptionHandler = NULL;
 
+typedef void (*SignalExceptionHandler)(int signal, siginfo_t *info, void *context);
+
+static SignalExceptionHandler previousSEGVSignalHandler = NULL;
+static SignalExceptionHandler previousFPESignalHandler  = NULL;
+static SignalExceptionHandler previousBUSSignalHandler  = NULL;
+static SignalExceptionHandler previousTRAPSignalHandler = NULL;
+static SignalExceptionHandler previousABRTSignalHandler = NULL;
+static SignalExceptionHandler previousILLSignalHandler  = NULL;
+static SignalExceptionHandler previousPIPESignalHandler = NULL;
+static SignalExceptionHandler previousSYSSignalHandler  = NULL;
+
 @implementation CatchCrash
 
 + (void)startMonitoring {
-    [self setUncaughtExceptionHandler];
-    [self setSignalExceptionHandler];
+    setUncaughtExceptionHandler();
+    setSignalExceptionHandler();
     
     /* 使用PLCrashReporter采集（Uncaught & Signal）
-     [self initializeCrashReporter];
+     initializeCrashReporter();
      */
 }
 
 + (void)stopMonitoring {
-    [self resetUncaughtExceptionHandler];
-    [self resetSignalExceptionHanlder];
+    resetUncaughtExceptionHandler();
+    resetSignalExceptionHanlder();
 }
 
 #pragma mark - Uncaught & Signal -
-+ (void)setUncaughtExceptionHandler {
+static void setUncaughtExceptionHandler(void) {
     previousUncaughtExceptionHandler = NSGetUncaughtExceptionHandler();
     
-    NSSetUncaughtExceptionHandler(&uncaught_exception_handler);
+    NSSetUncaughtExceptionHandler(&uncaughtExceptionHandler);
 }
 
-+ (void)resetUncaughtExceptionHandler {
+static void resetUncaughtExceptionHandler(void) {
     NSSetUncaughtExceptionHandler(previousUncaughtExceptionHandler);
 }
 
-+ (void)setSignalExceptionHandler {
-    if (debugger_should_exit()) return; // 采集signal异常需要断开调试
+static void setSignalExceptionHandler(void) {
+    if (debuggerShouldExit()) return; // 采集signal异常需要断开调试
     
-    signal(SIGSEGV, signal_exception_handler);
-    signal(SIGFPE, signal_exception_handler);
-    signal(SIGBUS, signal_exception_handler);
-    signal(SIGTRAP, signal_exception_handler);
-    signal(SIGABRT, signal_exception_handler);
-    signal(SIGILL, signal_exception_handler);
-    signal(SIGPIPE, signal_exception_handler);
-    signal(SIGSYS, signal_exception_handler);
+    backupPreviousSignalHandlers();
+    
+    signalRegister(SIGSEGV, signalExceptionHandler);
+    signalRegister(SIGFPE, signalExceptionHandler);
+    signalRegister(SIGBUS, signalExceptionHandler);
+    signalRegister(SIGTRAP, signalExceptionHandler);
+    signalRegister(SIGABRT, signalExceptionHandler);
+    signalRegister(SIGILL, signalExceptionHandler);
+    signalRegister(SIGPIPE, signalExceptionHandler);
+    signalRegister(SIGSYS, signalExceptionHandler);
 }
 
-+ (void)resetSignalExceptionHanlder {
-    signal(SIGSEGV, SIG_DFL);
-    signal(SIGFPE, SIG_DFL);
-    signal(SIGBUS, SIG_DFL);
-    signal(SIGTRAP, SIG_DFL);
-    signal(SIGABRT, SIG_DFL);
-    signal(SIGILL, SIG_DFL);
-    signal(SIGPIPE, SIG_DFL);
-    signal(SIGSYS, SIG_DFL);
+static void resetSignalExceptionHanlder(void) {
+    if (previousSEGVSignalHandler) {
+        signalRegister(SIGSEGV, previousSEGVSignalHandler);
+    } else {
+        signal(SIGSEGV, SIG_DFL);
+    }
+    
+    if (previousFPESignalHandler) {
+        signalRegister(SIGFPE, previousFPESignalHandler);
+    } else {
+        signal(SIGFPE, SIG_DFL);
+    }
+    
+    if (previousBUSSignalHandler) {
+        signalRegister(SIGBUS, previousBUSSignalHandler);
+    } else {
+        signal(SIGBUS, SIG_DFL);
+    }
+    
+    if (previousTRAPSignalHandler) {
+        signalRegister(SIGTRAP, previousTRAPSignalHandler);
+    } else {
+        signal(SIGTRAP, SIG_DFL);
+    }
+    
+    if (previousABRTSignalHandler) {
+        signalRegister(SIGABRT, previousABRTSignalHandler);
+    } else {
+        signal(SIGABRT, SIG_DFL);
+    }
+    
+    if (previousILLSignalHandler) {
+        signalRegister(SIGILL, previousILLSignalHandler);
+    } else {
+        signal(SIGILL, SIG_DFL);
+    }
+    
+    if (previousPIPESignalHandler) {
+        signalRegister(SIGPIPE, previousPIPESignalHandler);
+    } else {
+        signal(SIGPIPE, SIG_DFL);
+    }
+    
+    if (previousSYSSignalHandler) {
+        signalRegister(SIGSYS, previousSYSSignalHandler);
+    } else {
+        signal(SIGSYS, SIG_DFL);
+    }
 }
 
-static void uncaught_exception_handler(NSException *exception) {
+static void backupPreviousSignalHandlers(void) {
+    struct sigaction old_action_segv;
+    sigaction(SIGSEGV, NULL, &old_action_segv);
+    if (old_action_segv.sa_sigaction) {
+        previousSEGVSignalHandler = old_action_segv.sa_sigaction;
+    }
+    
+    struct sigaction old_action_fpe;
+    sigaction(SIGFPE, NULL, &old_action_fpe);
+    if (old_action_fpe.sa_sigaction) {
+        previousFPESignalHandler = old_action_fpe.sa_sigaction;
+    }
+    
+    struct sigaction old_action_bus;
+    sigaction(SIGBUS, NULL, &old_action_bus);
+    if (old_action_bus.sa_sigaction) {
+        previousBUSSignalHandler = old_action_bus.sa_sigaction;
+    }
+    
+    struct sigaction old_action_trap;
+    sigaction(SIGTRAP, NULL, &old_action_trap);
+    if (old_action_trap.sa_sigaction) {
+        previousTRAPSignalHandler = old_action_trap.sa_sigaction;
+    }
+    
+    struct sigaction old_action_abrt;
+    sigaction(SIGABRT, NULL, &old_action_abrt);
+    if (old_action_abrt.sa_sigaction) {
+        previousABRTSignalHandler = old_action_abrt.sa_sigaction;
+    }
+    
+    struct sigaction old_action_ill;
+    sigaction(SIGILL, NULL, &old_action_ill);
+    if (old_action_ill.sa_sigaction) {
+        previousILLSignalHandler = old_action_ill.sa_sigaction;
+    }
+    
+    struct sigaction old_action_pipe;
+    sigaction(SIGPIPE, NULL, &old_action_pipe);
+    if (old_action_pipe.sa_sigaction) {
+        previousPIPESignalHandler = old_action_pipe.sa_sigaction;
+    }
+    
+    struct sigaction old_action_sys;
+    sigaction(SIGSYS, NULL, &old_action_sys);
+    if (old_action_sys.sa_sigaction) {
+        previousSYSSignalHandler = old_action_sys.sa_sigaction;
+    }
+}
+
+static void signalRegister(int signal, SignalExceptionHandler signalHandler) {
+    struct sigaction action;
+    action.sa_sigaction = signalHandler;
+    action.sa_flags = SA_NODEFER | SA_SIGINFO;
+    sigemptyset(&action.sa_mask);
+    sigaction(signal, &action, NULL);
+}
+
+static void uncaughtExceptionHandler(NSException *exception) {
+    /* 使用PLCrashReporter获取异常信息
+     PLCrashReporterConfig *config = [[PLCrashReporterConfig alloc] initWithSignalHandlerType:PLCrashReporterSignalHandlerTypeMach // 完整线程上下文
+                                                                       symbolicationStrategy:PLCrashReporterSymbolicationStrategyAll]; // Release使用None
+     PLCrashReporter *crashReporter = [[PLCrashReporter alloc] initWithConfiguration:config];
+    
+     NSData *data = [crashReporter generateLiveReportWithException:exception error:nil];
+     PLCrashReport *crashReport = [[PLCrashReport alloc] initWithData:data error:nil];
+     NSString *exceptionInfo = [PLCrashReportTextFormatter stringValueForCrashReport:crashReport withTextFormat:PLCrashReportTextFormatiOS];
+     */
+    
+    // 获取异常信息
     NSArray *stackSymbols = [exception callStackSymbols];
     NSString *name = [exception name];
     NSString *reason = [exception reason];
-    NSString *exceptionInfo = [NSString stringWithFormat:@"Uncaught Exception Name: %@\nReason: %@\nStackSymbols: %@", name, reason, stackSymbols];
+    NSString *exceptionInfo = [NSString stringWithFormat:@"Application Specific Information:\n*** Terminating app due to uncaught exception '%@', reason: '%@'\n\nLast Exception Backtrace:\n%@", name, reason, [stackSymbols componentsJoinedByString:@"\n"]];
     
     // 先保存到本地，等下次启动再上传日志
     NSString *filePath = [NSString stringWithFormat:@"%@/Documents/uncaught-exception.log", NSHomeDirectory()];
@@ -82,9 +203,10 @@ static void uncaught_exception_handler(NSException *exception) {
     kill(getpid(), SIGKILL);
 }
 
-static void signal_exception_handler(int signal) {
+static void signalExceptionHandler(int signal, siginfo_t* info, void* context) {
+    // 使用PLCrashReporter获取异常信息
     PLCrashReporterConfig *config = [[PLCrashReporterConfig alloc] initWithSignalHandlerType:PLCrashReporterSignalHandlerTypeMach // 完整线程上下文
-                                                                       symbolicationStrategy:PLCrashReporterSymbolicationStrategyAll]; // 在Release环境下无效
+                                                                       symbolicationStrategy:PLCrashReporterSymbolicationStrategyAll]; // Release使用None
     PLCrashReporter *crashReporter = [[PLCrashReporter alloc] initWithConfiguration:config];
     
     NSData *data = [crashReporter generateLiveReport];
@@ -95,27 +217,67 @@ static void signal_exception_handler(int signal) {
     NSString *filePath = [NSString stringWithFormat:@"%@/Documents/signal-exception.log", NSHomeDirectory()];
     [exceptionInfo writeToFile:filePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
     
+    // 调用之前崩溃的回调函数
+    previousSignalHandler(signal, info, context);
+    
     // 杀掉程序，防止同时抛出的SIGABRT被SignalException捕获
     kill(getpid(), SIGKILL);
 }
 
+static void previousSignalHandler(int signal, siginfo_t *info, void *context) {
+    SignalExceptionHandler previousSignalHandler = NULL;
+    switch (signal) {
+        case SIGSEGV:
+            previousSignalHandler = previousSEGVSignalHandler;
+            break;
+        case SIGFPE:
+            previousSignalHandler = previousFPESignalHandler;
+            break;
+        case SIGBUS:
+            previousSignalHandler = previousBUSSignalHandler;
+            break;
+        case SIGTRAP:
+            previousSignalHandler = previousTRAPSignalHandler;
+            break;
+        case SIGABRT:
+            previousSignalHandler = previousABRTSignalHandler;
+            break;
+        case SIGILL:
+            previousSignalHandler = previousILLSignalHandler;
+            break;
+        case SIGPIPE:
+            previousSignalHandler = previousPIPESignalHandler;
+            break;
+        case SIGSYS:
+            previousSignalHandler = previousSYSSignalHandler;
+            break;
+        default:
+            break;
+    }
+    
+    if (previousSignalHandler) {
+        previousSignalHandler(signal, info, context);
+    }
+}
+
 #pragma mark - PLCrashReporter -
-+ (void)initializeCrashReporter {
-    if (debugger_should_exit()) return; // 采集signal异常需要断开调试
+static void initializeCrashReporter(void) {
+    if (debuggerShouldExit()) return; // 采集signal异常需要断开调试
     
     PLCrashReporterConfig *config = [[PLCrashReporterConfig alloc] initWithSignalHandlerType:PLCrashReporterSignalHandlerTypeMach // 完整线程上下文
-                                                                       symbolicationStrategy:PLCrashReporterSymbolicationStrategyAll]; // 在Release环境下无效
+                                                                       symbolicationStrategy:PLCrashReporterSymbolicationStrategyAll // Release使用None
+                                                      shouldRegisterUncaughtExceptionHandler:YES];
     PLCrashReporter *crashReporter = [[PLCrashReporter alloc] initWithConfiguration:config];
     
     // 是否有待处理的崩溃报告
     if ([crashReporter hasPendingCrashReport]) {
-        [self handlePendingCrashReport:crashReporter];
+        handlePendingCrashReport(crashReporter);
     }
     
     PLCrashReporterCallbacks callbacks = {
         .version = 0,
         .context = (void *) 0xABABABAB,
-        .handleSignal = crash_reporter_handler
+        .handleSignal = crashReporterHandler
     };
     [crashReporter setCrashCallbacks:&callbacks];
     
@@ -123,7 +285,7 @@ static void signal_exception_handler(int signal) {
     [crashReporter enableCrashReporter];
 }
 
-+ (void)handlePendingCrashReport:(PLCrashReporter *)crashReporter {
+static void handlePendingCrashReport(PLCrashReporter *crashReporter) {
     NSData *data = [crashReporter loadPendingCrashReportDataAndReturnError:nil];
     PLCrashReport *crashReport = [[PLCrashReport alloc] initWithData:data error:nil];
     NSString *exceptionInfo = [PLCrashReportTextFormatter stringValueForCrashReport:crashReport withTextFormat:PLCrashReportTextFormatiOS];
@@ -136,11 +298,11 @@ static void signal_exception_handler(int signal) {
     [crashReporter purgePendingCrashReport];
 }
 
-static void crash_reporter_handler (siginfo_t *info, ucontext_t *uap, void *context) {
-    NSLog(@"crash_reporter_handler: signo-%d, uap-%p, context-%p", info->si_signo, uap, context);
+static void crashReporterHandler (siginfo_t *info, ucontext_t *uap, void *context) {
+    NSLog(@"crashReporterHandler: signo-%d, uap-%p, context-%p", info->si_signo, uap, context);
 }
 
-static bool debugger_should_exit(void) {
+static bool debuggerShouldExit(void) {
     struct kinfo_proc info;
     size_t info_size = sizeof(info);
     int name[4];

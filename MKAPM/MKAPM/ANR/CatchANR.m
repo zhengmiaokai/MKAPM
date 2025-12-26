@@ -88,7 +88,7 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
 
 - (void)reportStackInfo {
     PLCrashReporterConfig *config = [[PLCrashReporterConfig alloc] initWithSignalHandlerType:PLCrashReporterSignalHandlerTypeMach // 完整线程上下文
-                                                                       symbolicationStrategy:PLCrashReporterSymbolicationStrategyAll]; // 在Release环境下无效
+                                                                       symbolicationStrategy:PLCrashReporterSymbolicationStrategyNone]; // Release使用None
     PLCrashReporter *crashReporter = [[PLCrashReporter alloc] initWithConfiguration:config];
     
     NSData *data = [crashReporter generateLiveReport];
